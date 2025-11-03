@@ -22,22 +22,9 @@ services:
     networks:
       - cdp-tenant
 
-  mongodb:
-    image: mongo:7.0
-    networks:
-      - cdp-tenant
-    volumes:
-      - mongodb-data:/data/mongo-db
-    restart: always
-    healthcheck:
-      test: ['CMD', 'mongosh', '--eval', 'db.adminCommand("ping")']
-      interval: 5s
-      start_period: 10s
-      retries: 3
-
   postgres:
     image: postgres:16
-    container_name: local_postgres
+    container_name: trade-commodity-codes-postgres
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -47,6 +34,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - cdp-tenant
 
   trade-commodity-codes:
     build:
@@ -55,15 +44,11 @@ services:
     ports:
       - '8085:8085'
       - '5005:5005' # Java debug port
-      - '27017:27017' # MongoDB
     links:
       - 'localstack:localstack'
-      - 'mongodb:mongodb'
       - 'postgres:postgres'
     depends_on:
       localstack:
-        condition: service_healthy
-      mongodb:
         condition: service_healthy
     env_file:
       - 'compose/aws.env'
@@ -74,10 +59,6 @@ services:
       # Service Identity
       SERVICE_VERSION: 0.0.0-local
       ENVIRONMENT: local
-
-      # MongoDB
-      MONGO_URI: mongodb://mongodb:27017
-      MONGO_DATABASE: trade-commodity-codes
 
       # Postgres
       POSTGRES_URI: jdbc:postgresql://postgres:5432/trade-commodity-codes
@@ -107,7 +88,6 @@ services:
 
 volumes:
   localstack-data:
-  mongodb-data:
   postgres-data:
 
 networks:

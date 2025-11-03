@@ -5,20 +5,25 @@ server:
 spring:
   application:
     name: trade-commodity-codes
-  data:
-    mongodb:
-      uri: ${MONGO_URI:mongodb://localhost:27017/}
-      database: ${MONGO_DATABASE:trade-commodity-codes}
-      auto-index-creation: true
-      read-preference: ${MONGO_READ_PREFERENCE:secondary}
-      write-concern: ${MONGO_WRITE_CONCERN:majority}
-      connection-pool:
-        min-size: ${MONGO_POOL_MIN_SIZE:10}
-        max-size: ${MONGO_POOL_MAX_SIZE:100}
-        max-wait-time-ms: ${MONGO_POOL_MAX_WAIT_TIME_MS:2000}
-        max-connection-idle-time-ms: ${MONGO_POOL_MAX_IDLE_TIME_MS:60000}
-      ssl:
-        enabled: true
+  datasource:
+    url: ${POSTGRES_URI:jdbc:postgresql://postgres:5432/trade-commodity-codes}
+    username: ${POSTGRES_USERNAME:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:none}
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: ${LIQUIBASE_ENABLED:true}
+    drop-first: ${LIQUIBASE_DROP_FIRST:false}
+    contexts: ${LIQUIBASE_CONTEXTS:default}
+
   lifecycle:
     timeout-per-shutdown-phase: 30s
   cloud:
