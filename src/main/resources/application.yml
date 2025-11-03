@@ -1,0 +1,102 @@
+server:
+  port: ${PORT:8085}
+  shutdown: graceful
+
+spring:
+  application:
+    name: trade-commodity-codes
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/}
+      database: ${MONGO_DATABASE:trade-commodity-codes}
+      auto-index-creation: true
+      read-preference: ${MONGO_READ_PREFERENCE:secondary}
+      write-concern: ${MONGO_WRITE_CONCERN:majority}
+      connection-pool:
+        min-size: ${MONGO_POOL_MIN_SIZE:10}
+        max-size: ${MONGO_POOL_MAX_SIZE:100}
+        max-wait-time-ms: ${MONGO_POOL_MAX_WAIT_TIME_MS:2000}
+        max-connection-idle-time-ms: ${MONGO_POOL_MAX_IDLE_TIME_MS:60000}
+      ssl:
+        enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  cloud:
+    aws:
+      cloudwatch:
+        enabled:  ${AWS_EMF_ENABLED:true}
+        endpoint: ${AWS_EMF_AGENT_ENDPOINT:tcp://localhost:4566}
+        region: ${AWS_REGION:eu-west-2}
+        step: 1m
+        connectTimeout: 20s
+        readTimeout: 20s
+        batchSize: 1000
+        numThreads: 1
+
+# CDP platform configuration
+cdp:
+  certificate: ${TRUSTSTORE_CDP_ROOT_CA:}
+  metrics:
+    enabled: true
+  service-version: ${SERVICE_VERSION:0.0.0-local}
+  tracing:
+    header-name: ${TRACING_HEADER:x-cdp-request-id}
+  proxyUrl: ${HTTP_PROXY:}
+
+# AWS configuration
+aws:
+  region: ${AWS_REGION:eu-west-2}
+  emf:
+    enabled: ${AWS_EMF_ENABLED:true}
+    environment: ${AWS_EMF_ENVIRONMENT:Local}
+    namespace: ${AWS_EMF_NAMESPACE:trade-commodity-codes}
+    service:
+      name: ${AWS_EMF_SERVICE_NAME:trade-commodity-codes}
+      type: ${AWS_EMF_SERVICE_TYPE:SpringBootApp}
+
+# Logging configuration
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    uk.gov.defra.cdp.trade.demo: ${LOG_LEVEL:DEBUG}
+    uk.gov.defra.cdp.trade.demo.common.metrics: ${LOGGING_LEVEL_UK_GOV_DEFRA_CDP_TRADE_DEMO_COMMON_METRICS:INFO}
+    org.springframework: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK:INFO}
+    org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
+    org.mongodb: ${LOGGING_LEVEL_ORG_MONGODB_DRIVER:WARN}
+    io.netty.handler.logging.LoggingHandler: WARN
+
+# Actuator endpoints
+# Production: Only health endpoint exposed (secure by default)
+# Development: Use dev profile (application-dev.yml) for debugging endpoints
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health,metrics,info
+  endpoint:
+    health:
+      show-details: never
+  info:
+    env:
+      enabled: true
+  health:
+    mongo:
+      enabled: false
+  metrics:
+    export:
+      cloudwatch:
+        enabled: true
+        namespace: ${AWS_EMF_NAMESPACE:trade-commodity-codes}
+        step: 1m
+        connectTimeout: 20s
+        readTimeout: 20s
+        batchSize: 1000
+        numThreads: 2
+  
+# Application info (exposed via /info endpoint)
+info:
+  app:
+    name: ${spring.application.name}
+    version: ${cdp.service-version}
+    environment: ${ENVIRONMENT:local}
