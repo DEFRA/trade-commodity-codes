@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- ============================================================================ -->
+    <!-- PostgreSQL Consolidated Table Structure Changelog -->
+    <!-- ============================================================================ -->
+
+    <!-- Core Reference Tables -->
+    <changeSet id="postgresql-01-create-certificates-table" author="consolidated-migration">
+        <createTable tableName="certificates">
+            <column name="code" type="VARCHAR(250)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="short_description" type="TEXT"/>
+            <column name="effective_from" type="TIMESTAMP"/>
+            <column name="effective_to" type="TIMESTAMP"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="certificates"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-02-create-commodity-nomenclature-table" author="consolidated-migration">
+        <createTable tableName="commodity_nomenclature">
+            <column name="code" type="VARCHAR(250)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="sorting_key" type="VARCHAR(100)"/>
+            <column name="full_commodity_code" type="VARCHAR(100)"/>
+            <column name="full_description" type="TEXT"/>
+            <column name="commodity_nomenclature_parent_code" type="VARCHAR(250)"/>
+            <column name="traces_commodity_code" type="VARCHAR(100)"/>
+            <column name="traces_commodity_code_description" type="TEXT"/>
+            <column name="effective_from" type="TIMESTAMP"/>
+            <column name="effective_to" type="TIMESTAMP"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="commodity_nomenclature"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-03-create-species-table" author="consolidated-migration">
+        <createTable tableName="species">
+            <column name="code" type="VARCHAR(250)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="effective_from" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_to" type="TIMESTAMP"/>
+            <column name="invasive_species_indicator" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="eppo_code" type="VARCHAR(500)"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="species"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Certification Tables -->
+    <changeSet id="postgresql-04-create-certification-requirement-table" author="consolidated-migration">
+        <createTable tableName="certification_requirement">
+            <column name="code" type="VARCHAR(250)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="certification_requirement_code" type="VARCHAR(250)"/>
+            <column name="commodity_nomenclature_id_code" type="VARCHAR(250)"/>
+            <column name="traces_parent_code" type="VARCHAR(250)"/>
+            <column name="is_selectable" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_traces_visible" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="effective_from" type="TIMESTAMP"/>
+            <column name="effective_to" type="TIMESTAMP"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="certification_requirement"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-05-create-certification-nomenclature-table" author="consolidated-migration">
+        <createTable tableName="certification_nomenclature">
+            <column name="code" type="VARCHAR(250)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="certification_requirement_code" type="VARCHAR(250)"/>
+            <column name="species_code" type="VARCHAR(250)"/>
+            <column name="species_name" type="VARCHAR(250)"/>
+            <column name="species_id" type="INTEGER"/>
+            <column name="commodity_type_name" type="VARCHAR(500)"/>
+            <column name="class_name" type="VARCHAR(500)"/>
+            <column name="family_name" type="VARCHAR(500)"/>
+            <column name="effective_from" type="TIMESTAMP"/>
+            <column name="effective_to" type="TIMESTAMP"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="certification_nomenclature"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Commodity Data Tables -->
+    <changeSet id="postgresql-06-create-commodity-class-table" author="consolidated-migration">
+        <createTable tableName="commodity_class">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="traces_commodity_code" type="VARCHAR(100)"/>
+            <column name="class" type="VARCHAR(500)"/>
+            <column name="effective_from" type="VARCHAR(255)"/>
+            <column name="effective_to" type="VARCHAR(255)"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="commodity_class"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-07-create-commodity-eppo-variety-table" author="consolidated-migration">
+        <createTable tableName="commodity_eppo_variety">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="traces_commodity_code" type="VARCHAR(100)"/>
+            <column name="eppo_code" type="VARCHAR(500)"/>
+            <column name="variety" type="VARCHAR(500)"/>
+            <column name="effective_from" type="VARCHAR(255)"/>
+            <column name="effective_to" type="VARCHAR(255)"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="commodity_eppo_variety"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-08-create-hmi-marketing-table" author="consolidated-migration">
+        <createTable tableName="hmi_marketing">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="traces_commodity_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="eppo_code" type="VARCHAR(500)"/>
+            <column name="variety" type="VARCHAR(500)"/>
+            <column name="certificate_validity_period" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hmi_marketing_standard" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_from" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_to" type="TIMESTAMP"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="hmi_marketing"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-09-create-inspection-responsibility-table" author="consolidated-migration">
+        <createTable tableName="inspection_responsibility">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="traces_commodity_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="eppo_code" type="VARCHAR(500)"/>
+            <column name="intended_use" type="VARCHAR(1000)"/>
+            <column name="inspection_responsibility" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_from" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_to" type="TIMESTAMP"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="inspection_responsibility"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-10-create-commodity-group-table" author="consolidated-migration">
+        <createTable tableName="commodity_group">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_from" type="TIMESTAMP"/>
+            <column name="effective_to" type="TIMESTAMP"/>
+            <column name="is_deleted" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="commodity_group"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-11-create-commodity-group-commodity-table" author="consolidated-migration">
+        <createTable tableName="commodity_group_commodity">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="traces_commodity_code" type="VARCHAR(255)"/>
+            <column name="commodity_group_code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_from" type="TIMESTAMP"/>
+            <column name="effective_to" type="TIMESTAMP"/>
+            <column name="last_chg_date_time" type="TIMESTAMP"/>
+            <column name="is_deleted" type="BOOLEAN" defaultValueBoolean="false"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="commodity_group_commodity"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-12-create-article-72-commodities-table" author="consolidated-migration">
+        <createTable tableName="article_72_commodities">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="commodity_code" type="VARCHAR(13)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="eppo_code" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="commodity_group" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="article_72_commodities"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-13-create-commodity-configuration-table" author="consolidated-migration">
+        <createTable tableName="commodity_configuration">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="commodity_code" type="VARCHAR(13)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requires_test_and_trial" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="finished_or_propagated" type="VARCHAR(50)"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="commodity_configuration"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="postgresql-14-create-commoditycode-attributes-table" author="consolidated-migration">
+        <createTable tableName="commoditycode_attributes">
+            <column name="code" type="VARCHAR(250)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="traces_commodity_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="commodity_type" type="VARCHAR(50)"/>
+            <column name="effective_from" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_to" type="TIMESTAMP"/>
+            <column name="is_deleted" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="commoditycode_attributes"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Data Loading and Management Tables -->
+    <changeSet id="postgresql-15-create-data-load-table" author="consolidated-migration">
+        <createTable tableName="data_load">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="loaded" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(265)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="table_name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="data_load"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Foreign Key Constraints -->
+    <changeSet id="postgresql-16-add-foreign-key-constraints" author="consolidated-migration">
+        <addForeignKeyConstraint 
+            baseTableName="certification_requirement"
+            baseColumnNames="commodity_nomenclature_id_code"
+            constraintName="fk_cert_req_commodity_nomenclature"
+            referencedTableName="commodity_nomenclature"
+            referencedColumnNames="code"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="certification_requirement"
+            baseColumnNames="certification_requirement_code"
+            constraintName="fk_cert_req_certificates"
+            referencedTableName="certificates"
+            referencedColumnNames="code"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="certification_nomenclature"
+            baseColumnNames="certification_requirement_code"
+            constraintName="fk_cert_nom_cert_requirement"
+            referencedTableName="certification_requirement"
+            referencedColumnNames="code"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="certification_nomenclature"
+            baseColumnNames="species_code"
+            constraintName="fk_cert_nom_species"
+            referencedTableName="species"
+            referencedColumnNames="code"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="commodity_group_commodity"
+            baseColumnNames="commodity_group_code"
+            constraintName="fk_cgc_commodity_group"
+            referencedTableName="commodity_group"
+            referencedColumnNames="code"/>
+        
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="certification_requirement" constraintName="fk_cert_req_commodity_nomenclature"/>
+            <dropForeignKeyConstraint baseTableName="certification_requirement" constraintName="fk_cert_req_certificates"/>
+            <dropForeignKeyConstraint baseTableName="certification_nomenclature" constraintName="fk_cert_nom_cert_requirement"/>
+            <dropForeignKeyConstraint baseTableName="certification_nomenclature" constraintName="fk_cert_nom_species"/>
+            <dropForeignKeyConstraint baseTableName="commodity_group_commodity" constraintName="fk_cgc_commodity_group"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Indexes for Performance -->
+    <changeSet id="postgresql-17-create-performance-indexes" author="consolidated-migration">
+        <!-- Commodity nomenclature indexes -->
+        <createIndex tableName="commodity_nomenclature" indexName="ix_commodity_nomenclature_parent">
+            <column name="commodity_nomenclature_parent_code"/>
+        </createIndex>
+        <createIndex tableName="commodity_nomenclature" indexName="ix_commodity_nomenclature_traces">
+            <column name="traces_commodity_code"/>
+        </createIndex>
+
+        <!-- Certification requirement indexes -->
+        <createIndex tableName="certification_requirement" indexName="ix_certification_requirement_commodity">
+            <column name="commodity_nomenclature_id_code"/>
+        </createIndex>
+        <createIndex tableName="certification_requirement" indexName="ix_certification_requirement_cert">
+            <column name="certification_requirement_code"/>
+        </createIndex>
+        <createIndex tableName="certification_requirement" indexName="ix_certification_requirement_parent">
+            <column name="traces_parent_code"/>
+        </createIndex>
+
+        <!-- Certification nomenclature indexes -->
+        <createIndex tableName="certification_nomenclature" indexName="ix_certification_nomenclature_requirement">
+            <column name="certification_requirement_code"/>
+        </createIndex>
+        <createIndex tableName="certification_nomenclature" indexName="ix_certification_nomenclature_species">
+            <column name="species_code"/>
+        </createIndex>
+
+        <!-- Commodity class indexes -->
+        <createIndex tableName="commodity_class" indexName="ix_commodity_class_traces_code">
+            <column name="traces_commodity_code"/>
+        </createIndex>
+
+        <!-- Commodity EPPO variety indexes -->
+        <createIndex tableName="commodity_eppo_variety" indexName="ix_commodity_eppo_variety_traces_code">
+            <column name="traces_commodity_code"/>
+        </createIndex>
+        <createIndex tableName="commodity_eppo_variety" indexName="ix_commodity_eppo_variety_eppo_code">
+            <column name="eppo_code"/>
+        </createIndex>
+
+        <!-- HMI marketing indexes -->
+        <createIndex tableName="hmi_marketing" indexName="ix_hmi_marketing_traces_code">
+            <column name="traces_commodity_code"/>
+        </createIndex>
+        <createIndex tableName="hmi_marketing" indexName="ix_hmi_marketing_eppo_code">
+            <column name="eppo_code"/>
+        </createIndex>
+
+        <!-- Inspection responsibility indexes -->
+        <createIndex tableName="inspection_responsibility" indexName="ix_inspection_responsibility_traces_code">
+            <column name="traces_commodity_code"/>
+        </createIndex>
+        <createIndex tableName="inspection_responsibility" indexName="ix_inspection_responsibility_eppo_code">
+            <column name="eppo_code"/>
+        </createIndex>
+
+        <!-- Commodity group indexes -->
+        <createIndex tableName="commodity_group" indexName="ix_commodity_group_code">
+            <column name="code"/>
+        </createIndex>
+
+        <!-- Commodity group commodity indexes -->
+        <createIndex tableName="commodity_group_commodity" indexName="ix_commodity_group_commodity_group_code">
+            <column name="commodity_group_code"/>
+        </createIndex>
+        <createIndex tableName="commodity_group_commodity" indexName="ix_commodity_group_commodity_traces_code">
+            <column name="traces_commodity_code"/>
+        </createIndex>
+
+        <!-- Commodity attributes indexes -->
+        <createIndex tableName="commoditycode_attributes" indexName="ix_commoditycode_attributes_traces_code">
+            <column name="traces_commodity_code"/>
+        </createIndex>
+        <createIndex tableName="commoditycode_attributes" indexName="ix_commoditycode_attributes_type">
+            <column name="commodity_type"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="commodity_nomenclature" indexName="ix_commodity_nomenclature_parent"/>
+            <dropIndex tableName="commodity_nomenclature" indexName="ix_commodity_nomenclature_traces"/>
+            <dropIndex tableName="certification_requirement" indexName="ix_certification_requirement_commodity"/>
+            <dropIndex tableName="certification_requirement" indexName="ix_certification_requirement_cert"/>
+            <dropIndex tableName="certification_requirement" indexName="ix_certification_requirement_parent"/>
+            <dropIndex tableName="certification_nomenclature" indexName="ix_certification_nomenclature_requirement"/>
+            <dropIndex tableName="certification_nomenclature" indexName="ix_certification_nomenclature_species"/>
+            <dropIndex tableName="commodity_class" indexName="ix_commodity_class_traces_code"/>
+            <dropIndex tableName="commodity_eppo_variety" indexName="ix_commodity_eppo_variety_traces_code"/>
+            <dropIndex tableName="commodity_eppo_variety" indexName="ix_commodity_eppo_variety_eppo_code"/>
+            <dropIndex tableName="hmi_marketing" indexName="ix_hmi_marketing_traces_code"/>
+            <dropIndex tableName="hmi_marketing" indexName="ix_hmi_marketing_eppo_code"/>
+            <dropIndex tableName="inspection_responsibility" indexName="ix_inspection_responsibility_traces_code"/>
+            <dropIndex tableName="inspection_responsibility" indexName="ix_inspection_responsibility_eppo_code"/>
+            <dropIndex tableName="commodity_group" indexName="ix_commodity_group_code"/>
+            <dropIndex tableName="commodity_group_commodity" indexName="ix_commodity_group_commodity_group_code"/>
+            <dropIndex tableName="commodity_group_commodity" indexName="ix_commodity_group_commodity_traces_code"/>
+            <dropIndex tableName="commoditycode_attributes" indexName="ix_commoditycode_attributes_traces_code"/>
+            <dropIndex tableName="commoditycode_attributes" indexName="ix_commoditycode_attributes_type"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

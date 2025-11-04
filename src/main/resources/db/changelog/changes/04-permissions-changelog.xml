@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- ============================================================================ -->
+    <!-- PostgreSQL Consolidated Permissions Changelog -->
+    <!-- ============================================================================ -->
+
+    <!-- Create Database Roles -->
+    <changeSet id="postgresql-permissions-01-create-roles" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Main service role for commodity code operations
+            CREATE ROLE commodity_service_role;
+            
+            -- Data loading role for ETL operations  
+            CREATE ROLE commodity_data_loader_role;
+            
+            -- Read-only role for reporting and analytics
+            CREATE ROLE commodity_readonly_role;
+            
+            -- Admin role for database management
+            CREATE ROLE commodity_admin_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP ROLE IF EXISTS commodity_service_role;
+                DROP ROLE IF EXISTS commodity_data_loader_role;
+                DROP ROLE IF EXISTS commodity_readonly_role;
+                DROP ROLE IF EXISTS commodity_admin_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Service Role - Table Permissions -->
+    <changeSet id="postgresql-permissions-02-service-role-table-permissions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- SELECT permissions on all core tables
+            GRANT SELECT ON certificates TO commodity_service_role;
+            GRANT SELECT ON commodity_nomenclature TO commodity_service_role;
+            GRANT SELECT ON species TO commodity_service_role;
+            GRANT SELECT ON certification_requirement TO commodity_service_role;
+            GRANT SELECT ON certification_nomenclature TO commodity_service_role;
+            GRANT SELECT ON commodity_class TO commodity_service_role;
+            GRANT SELECT ON commodity_eppo_variety TO commodity_service_role;
+            GRANT SELECT ON hmi_marketing TO commodity_service_role;
+            GRANT SELECT ON inspection_responsibility TO commodity_service_role;
+            GRANT SELECT ON commodity_group TO commodity_service_role;
+            GRANT SELECT ON commodity_group_commodity TO commodity_service_role;
+            GRANT SELECT ON article_72_commodities TO commodity_service_role;
+            GRANT SELECT ON commodity_configuration TO commodity_service_role;
+            GRANT SELECT ON commoditycode_attributes TO commodity_service_role;
+            GRANT SELECT ON data_load TO commodity_service_role;
+            
+            -- Limited UPDATE permissions for specific operational needs
+            GRANT UPDATE ON hmi_marketing TO commodity_service_role;
+            GRANT UPDATE ON inspection_responsibility TO commodity_service_role;
+            GRANT UPDATE ON commodity_group TO commodity_service_role;
+            GRANT UPDATE ON commodity_group_commodity TO commodity_service_role;
+            GRANT UPDATE ON commoditycode_attributes TO commodity_service_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                REVOKE ALL PRIVILEGES ON certificates FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON commodity_nomenclature FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON species FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON certification_requirement FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON certification_nomenclature FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON commodity_class FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON commodity_eppo_variety FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON hmi_marketing FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON inspection_responsibility FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON commodity_group FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON commodity_group_commodity FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON article_72_commodities FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON commodity_configuration FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON commoditycode_attributes FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON data_load FROM commodity_service_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Data Loader Role - Table Permissions -->
+    <changeSet id="postgresql-permissions-03-data-loader-role-table-permissions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Full DML permissions on core data tables
+            GRANT SELECT, INSERT, UPDATE, DELETE ON certificates TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON commodity_nomenclature TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON species TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON certification_requirement TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON certification_nomenclature TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON commodity_class TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON commodity_eppo_variety TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON hmi_marketing TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON inspection_responsibility TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON commodity_group TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON commodity_group_commodity TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON article_72_commodities TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON commodity_configuration TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON commoditycode_attributes TO commodity_data_loader_role;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON data_load TO commodity_data_loader_role;
+            
+            -- Sequence permissions for auto-incrementing fields
+            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO commodity_data_loader_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                REVOKE ALL PRIVILEGES ON certificates FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON commodity_nomenclature FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON species FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON certification_requirement FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON certification_nomenclature FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON commodity_class FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON commodity_eppo_variety FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON hmi_marketing FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON inspection_responsibility FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON commodity_group FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON commodity_group_commodity FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON article_72_commodities FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON commodity_configuration FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON commoditycode_attributes FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON data_load FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM commodity_data_loader_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Read-Only Role - Table Permissions -->
+    <changeSet id="postgresql-permissions-04-readonly-role-table-permissions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- SELECT permissions only on all tables
+            GRANT SELECT ON certificates TO commodity_readonly_role;
+            GRANT SELECT ON commodity_nomenclature TO commodity_readonly_role;
+            GRANT SELECT ON species TO commodity_readonly_role;
+            GRANT SELECT ON certification_requirement TO commodity_readonly_role;
+            GRANT SELECT ON certification_nomenclature TO commodity_readonly_role;
+            GRANT SELECT ON commodity_class TO commodity_readonly_role;
+            GRANT SELECT ON commodity_eppo_variety TO commodity_readonly_role;
+            GRANT SELECT ON hmi_marketing TO commodity_readonly_role;
+            GRANT SELECT ON inspection_responsibility TO commodity_readonly_role;
+            GRANT SELECT ON commodity_group TO commodity_readonly_role;
+            GRANT SELECT ON commodity_group_commodity TO commodity_readonly_role;
+            GRANT SELECT ON article_72_commodities TO commodity_readonly_role;
+            GRANT SELECT ON commodity_configuration TO commodity_readonly_role;
+            GRANT SELECT ON commoditycode_attributes TO commodity_readonly_role;
+            GRANT SELECT ON data_load TO commodity_readonly_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                REVOKE ALL PRIVILEGES ON certificates FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON commodity_nomenclature FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON species FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON certification_requirement FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON certification_nomenclature FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON commodity_class FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON commodity_eppo_variety FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON hmi_marketing FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON inspection_responsibility FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON commodity_group FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON commodity_group_commodity FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON article_72_commodities FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON commodity_configuration FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON commoditycode_attributes FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON data_load FROM commodity_readonly_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Admin Role - Table Permissions -->
+    <changeSet id="postgresql-permissions-05-admin-role-table-permissions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Full permissions on all tables
+            GRANT ALL PRIVILEGES ON certificates TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON commodity_nomenclature TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON species TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON certification_requirement TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON certification_nomenclature TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON commodity_class TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON commodity_eppo_variety TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON hmi_marketing TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON inspection_responsibility TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON commodity_group TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON commodity_group_commodity TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON article_72_commodities TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON commodity_configuration TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON commoditycode_attributes TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON data_load TO commodity_admin_role;
+            
+            -- Schema and sequence permissions
+            GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO commodity_admin_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                REVOKE ALL PRIVILEGES ON certificates FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON commodity_nomenclature FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON species FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON certification_requirement FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON certification_nomenclature FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON commodity_class FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON commodity_eppo_variety FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON hmi_marketing FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON inspection_responsibility FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON commodity_group FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON commodity_group_commodity FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON article_72_commodities FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON commodity_configuration FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON commoditycode_attributes FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON data_load FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM commodity_admin_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- View Permissions -->
+    <changeSet id="postgresql-permissions-06-view-permissions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Service role - SELECT on all views
+            GRANT SELECT ON v_commodity_code TO commodity_service_role;
+            GRANT SELECT ON v_commodity_category TO commodity_service_role;
+            GRANT SELECT ON v_commodity_group TO commodity_service_role;
+            GRANT SELECT ON v_chedpp_species TO commodity_service_role;
+            GRANT SELECT ON v_chedp_species TO commodity_service_role;
+            GRANT SELECT ON v_commodity_code_species TO commodity_service_role;
+            GRANT SELECT ON v_data_load_status TO commodity_service_role;
+            GRANT SELECT ON v_active_commodity_configurations TO commodity_service_role;
+            GRANT SELECT ON v_active_commodity_attributes TO commodity_service_role;
+            
+            -- Data loader role - SELECT on all views
+            GRANT SELECT ON v_commodity_code TO commodity_data_loader_role;
+            GRANT SELECT ON v_commodity_category TO commodity_data_loader_role;
+            GRANT SELECT ON v_commodity_group TO commodity_data_loader_role;
+            GRANT SELECT ON v_chedpp_species TO commodity_data_loader_role;
+            GRANT SELECT ON v_chedp_species TO commodity_data_loader_role;
+            GRANT SELECT ON v_commodity_code_species TO commodity_data_loader_role;
+            GRANT SELECT ON v_data_load_status TO commodity_data_loader_role;
+            GRANT SELECT ON v_active_commodity_configurations TO commodity_data_loader_role;
+            GRANT SELECT ON v_active_commodity_attributes TO commodity_data_loader_role;
+            
+            -- Read-only role - SELECT on all views
+            GRANT SELECT ON v_commodity_code TO commodity_readonly_role;
+            GRANT SELECT ON v_commodity_category TO commodity_readonly_role;
+            GRANT SELECT ON v_commodity_group TO commodity_readonly_role;
+            GRANT SELECT ON v_chedpp_species TO commodity_readonly_role;
+            GRANT SELECT ON v_chedp_species TO commodity_readonly_role;
+            GRANT SELECT ON v_commodity_code_species TO commodity_readonly_role;
+            GRANT SELECT ON v_data_load_status TO commodity_readonly_role;
+            GRANT SELECT ON v_active_commodity_configurations TO commodity_readonly_role;
+            GRANT SELECT ON v_active_commodity_attributes TO commodity_readonly_role;
+            
+            -- Admin role - ALL on all views
+            GRANT ALL PRIVILEGES ON v_commodity_code TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_commodity_category TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_commodity_group TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_chedpp_species TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_chedp_species TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_commodity_code_species TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_data_load_status TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_active_commodity_configurations TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON v_active_commodity_attributes TO commodity_admin_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                REVOKE ALL PRIVILEGES ON v_commodity_code FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_category FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_group FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_chedpp_species FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_chedp_species FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_code_species FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_data_load_status FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_configurations FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_attributes FROM commodity_service_role;
+                
+                REVOKE ALL PRIVILEGES ON v_commodity_code FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_category FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_group FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_chedpp_species FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_chedp_species FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_code_species FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_data_load_status FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_configurations FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_attributes FROM commodity_data_loader_role;
+                
+                REVOKE ALL PRIVILEGES ON v_commodity_code FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_category FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_group FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_chedpp_species FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_chedp_species FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_code_species FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_data_load_status FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_configurations FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_attributes FROM commodity_readonly_role;
+                
+                REVOKE ALL PRIVILEGES ON v_commodity_code FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_category FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_group FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_chedpp_species FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_chedp_species FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_commodity_code_species FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_data_load_status FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_configurations FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON v_active_commodity_attributes FROM commodity_admin_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Function Permissions -->
+    <changeSet id="postgresql-permissions-07-function-permissions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Service role - EXECUTE on functions
+            GRANT EXECUTE ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_service_role;
+            GRANT EXECUTE ON FUNCTION RIGHT(TEXT, INTEGER) TO commodity_service_role;
+            GRANT EXECUTE ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_service_role;
+            GRANT EXECUTE ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) TO commodity_service_role;
+            GRANT EXECUTE ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) TO commodity_service_role;
+            
+            -- Data loader role - EXECUTE on functions
+            GRANT EXECUTE ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_data_loader_role;
+            GRANT EXECUTE ON FUNCTION RIGHT(TEXT, INTEGER) TO commodity_data_loader_role;
+            GRANT EXECUTE ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_data_loader_role;
+            GRANT EXECUTE ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) TO commodity_data_loader_role;
+            GRANT EXECUTE ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) TO commodity_data_loader_role;
+            
+            -- Read-only role - EXECUTE on functions
+            GRANT EXECUTE ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_readonly_role;
+            GRANT EXECUTE ON FUNCTION RIGHT(TEXT, INTEGER) TO commodity_readonly_role;
+            GRANT EXECUTE ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_readonly_role;
+            GRANT EXECUTE ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) TO commodity_readonly_role;
+            GRANT EXECUTE ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) TO commodity_readonly_role;
+            
+            -- Admin role - ALL on functions
+            GRANT ALL PRIVILEGES ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON FUNCTION RIGHT(TEXT, INTEGER) TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) TO commodity_admin_role;
+            GRANT ALL PRIVILEGES ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) TO commodity_admin_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION RIGHT(TEXT, INTEGER) FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) FROM commodity_service_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) FROM commodity_service_role;
+                
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION RIGHT(TEXT, INTEGER) FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) FROM commodity_data_loader_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) FROM commodity_data_loader_role;
+                
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION RIGHT(TEXT, INTEGER) FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) FROM commodity_readonly_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) FROM commodity_readonly_role;
+                
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION RIGHT(TEXT, INTEGER) FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) FROM commodity_admin_role;
+                REVOKE ALL PRIVILEGES ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) FROM commodity_admin_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Default Permissions for Future Objects -->
+    <changeSet id="postgresql-permissions-08-default-permissions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Ensure roles get permissions on future tables
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO commodity_service_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO commodity_readonly_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO commodity_data_loader_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO commodity_admin_role;
+            
+            -- Ensure roles get permissions on future sequences
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO commodity_service_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO commodity_data_loader_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO commodity_admin_role;
+            
+            -- Ensure roles get permissions on future functions
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO commodity_service_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO commodity_readonly_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO commodity_data_loader_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO commodity_admin_role;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE SELECT ON TABLES FROM commodity_service_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE SELECT ON TABLES FROM commodity_readonly_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES FROM commodity_data_loader_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES FROM commodity_admin_role;
+                
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE USAGE, SELECT ON SEQUENCES FROM commodity_service_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE USAGE, SELECT ON SEQUENCES FROM commodity_data_loader_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON SEQUENCES FROM commodity_admin_role;
+                
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM commodity_service_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM commodity_readonly_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM commodity_data_loader_role;
+                ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON FUNCTIONS FROM commodity_admin_role;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Add role comments for documentation -->
+    <changeSet id="postgresql-permissions-09-add-role-comments" author="consolidated-migration" dbms="postgresql">
+        <sql>
+            COMMENT ON ROLE commodity_service_role IS 'Main application service role with read access and limited update permissions';
+            COMMENT ON ROLE commodity_data_loader_role IS 'ETL and data loading role with full DML permissions';
+            COMMENT ON ROLE commodity_readonly_role IS 'Read-only role for reporting and analytics';
+            COMMENT ON ROLE commodity_admin_role IS 'Database administration role with full permissions';
+        </sql>
+        <rollback>
+            <sql>
+                COMMENT ON ROLE commodity_service_role IS NULL;
+                COMMENT ON ROLE commodity_data_loader_role IS NULL;
+                COMMENT ON ROLE commodity_readonly_role IS NULL;
+                COMMENT ON ROLE commodity_admin_role IS NULL;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

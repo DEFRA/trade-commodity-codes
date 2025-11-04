@@ -4,25 +4,23 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity
+@Table(name = "v_commodity_category")
+@IdClass(CommodityCategoryId.class)
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
-@IdClass(CommodityCodeId.class)
-@Table(name = "v_commodity_code")
-public class CommodityCode {
+@AllArgsConstructor
+public class CommodityCategory {
 
   @Id
-  private String code;
+  private String certificateType;
   @Id
-  private String certType;
-  private String displayCode;
-  private String description;
-  private String immediateParent;
-  private boolean isCommodity;
-  private boolean isParent;
+  private String commodityCode;
+  private String data;
 }

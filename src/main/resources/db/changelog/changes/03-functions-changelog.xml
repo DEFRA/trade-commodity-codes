@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- ============================================================================ -->
+    <!-- PostgreSQL Consolidated Functions Changelog -->
+    <!-- ============================================================================ -->
+
+    <!-- Function to generate commodity category data as JSON -->
+    <changeSet id="postgresql-functions-01-create-commodity-category-data-function" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            CREATE OR REPLACE FUNCTION fn_commodity_category_data(
+                requirement_code VARCHAR(250),
+                certificate_code VARCHAR(250), 
+                traces_commodity_code VARCHAR(100)
+            ) RETURNS TEXT AS $$
+            DECLARE
+                result_json TEXT;
+                types_array JSON;
+                classes_array JSON;
+                families_array JSON;
+                models_array JSON;
+                species_array JSON;
+                invasive_species_array JSON;
+            BEGIN
+                -- Initialize empty arrays
+                types_array := '[]'::JSON;
+                classes_array := '[]'::JSON;
+                families_array := '[]'::JSON;
+                models_array := '[]'::JSON;
+                species_array := '[]'::JSON;
+                invasive_species_array := '[]'::JSON;
+                
+                -- Build species array from certification nomenclature
+                SELECT COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'speciesName', cert_nom.species_name,
+                            'speciesId', cert_nom.species_id,
+                            'eppoCode', s.eppo_code
+                        )
+                    ),
+                    '[]'::JSON
+                ) INTO species_array
+                FROM certification_nomenclature cert_nom
+                LEFT JOIN species s ON s.code = cert_nom.species_code
+                WHERE cert_nom.certification_requirement_code = requirement_code
+                    AND cert_nom.species_code IS NOT NULL;
+                
+                -- Build invasive species array
+                SELECT COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'speciesName', cert_nom.species_name,
+                            'speciesId', cert_nom.species_id,
+                            'eppoCode', s.eppo_code,
+                            'invasive', s.invasive_species_indicator
+                        )
+                    ),
+                    '[]'::JSON
+                ) INTO invasive_species_array
+                FROM certification_nomenclature cert_nom
+                LEFT JOIN species s ON s.code = cert_nom.species_code
+                WHERE cert_nom.certification_requirement_code = requirement_code
+                    AND cert_nom.species_code IS NOT NULL
+                    AND s.invasive_species_indicator = TRUE;
+                
+                -- Build classes array from certification nomenclature
+                SELECT COALESCE(
+                    json_agg(
+                        DISTINCT cert_nom.class_name
+                    ),
+                    '[]'::JSON
+                ) INTO classes_array
+                FROM certification_nomenclature cert_nom
+                WHERE cert_nom.certification_requirement_code = requirement_code
+                    AND cert_nom.class_name IS NOT NULL;
+                
+                -- Build families array from certification nomenclature
+                SELECT COALESCE(
+                    json_agg(
+                        DISTINCT cert_nom.family_name
+                    ),
+                    '[]'::JSON
+                ) INTO families_array
+                FROM certification_nomenclature cert_nom
+                WHERE cert_nom.certification_requirement_code = requirement_code
+                    AND cert_nom.family_name IS NOT NULL;
+                
+                -- Build commodity types array from certification nomenclature
+                SELECT COALESCE(
+                    json_agg(
+                        DISTINCT cert_nom.commodity_type_name
+                    ),
+                    '[]'::JSON
+                ) INTO types_array
+                FROM certification_nomenclature cert_nom
+                WHERE cert_nom.certification_requirement_code = requirement_code
+                    AND cert_nom.commodity_type_name IS NOT NULL;
+                
+                -- Build the final JSON result
+                SELECT json_build_object(
+                    'requirementCode', requirement_code,
+                    'certificateCode', certificate_code,
+                    'tracesCommodityCode', traces_commodity_code,
+                    'types', types_array,
+                    'classes', classes_array,
+                    'families', families_array,
+                    'models', models_array,
+                    'species', species_array,
+                    'invasiveSpecies', invasive_species_array
+                )::TEXT INTO result_json;
+                
+                RETURN result_json;
+            END;
+            $$ LANGUAGE plpgsql;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR);
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Utility function for RIGHT string function (PostgreSQL doesn't have RIGHT) -->
+    <changeSet id="postgresql-functions-02-create-right-string-function" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            CREATE OR REPLACE FUNCTION RIGHT(input_string TEXT, length_param INTEGER) 
+            RETURNS TEXT AS $$
+            BEGIN
+                IF input_string IS NULL OR length_param < 0 THEN
+                    RETURN NULL;
+                END IF;
+                
+                IF length_param >= LENGTH(input_string) THEN
+                    RETURN input_string;
+                END IF;
+                
+                RETURN SUBSTRING(input_string FROM LENGTH(input_string) - length_param + 1);
+            END;
+            $$ LANGUAGE plpgsql IMMUTABLE;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS RIGHT(TEXT, INTEGER);
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Enhanced commodity category data function with additional business logic -->
+    <changeSet id="postgresql-functions-03-create-enhanced-commodity-category-function" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            CREATE OR REPLACE FUNCTION fn_enhanced_commodity_category_data(
+                requirement_code VARCHAR(250),
+                certificate_code VARCHAR(250), 
+                traces_commodity_code VARCHAR(100)
+            ) RETURNS JSON AS $$
+            DECLARE
+                result_json JSON;
+                certificate_info JSON;
+                commodity_info JSON;
+                species_info JSON;
+                classification_info JSON;
+            BEGIN
+                -- Get certificate information
+                SELECT json_build_object(
+                    'code', c.code,
+                    'description', c.short_description,
+                    'effectiveFrom', c.effective_from,
+                    'effectiveTo', c.effective_to
+                ) INTO certificate_info
+                FROM certificates c
+                WHERE c.code = certificate_code;
+                
+                -- Get commodity information
+                SELECT json_build_object(
+                    'code', cn.traces_commodity_code,
+                    'description', cn.traces_commodity_code_description,
+                    'fullDescription', cn.full_description,
+                    'parentCode', cn.commodity_nomenclature_parent_code
+                ) INTO commodity_info
+                FROM commodity_nomenclature cn
+                WHERE cn.traces_commodity_code = traces_commodity_code;
+                
+                -- Get species information with enhanced details
+                SELECT COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'speciesName', cert_nom.species_name,
+                            'speciesId', cert_nom.species_id,
+                            'eppoCode', s.eppo_code,
+                            'invasiveIndicator', s.invasive_species_indicator,
+                            'effectiveFrom', s.effective_from,
+                            'effectiveTo', s.effective_to,
+                            'commodityType', cert_nom.commodity_type_name,
+                            'className', cert_nom.class_name,
+                            'familyName', cert_nom.family_name
+                        )
+                    ),
+                    '[]'::JSON
+                ) INTO species_info
+                FROM certification_nomenclature cert_nom
+                LEFT JOIN species s ON s.code = cert_nom.species_code
+                WHERE cert_nom.certification_requirement_code = requirement_code;
+                
+                -- Get classification hierarchy
+                SELECT json_build_object(
+                    'types', COALESCE(
+                        (SELECT json_agg(DISTINCT commodity_type_name)
+                         FROM certification_nomenclature
+                         WHERE certification_requirement_code = requirement_code
+                           AND commodity_type_name IS NOT NULL),
+                        '[]'::JSON
+                    ),
+                    'classes', COALESCE(
+                        (SELECT json_agg(DISTINCT class_name)
+                         FROM certification_nomenclature
+                         WHERE certification_requirement_code = requirement_code
+                           AND class_name IS NOT NULL),
+                        '[]'::JSON
+                    ),
+                    'families', COALESCE(
+                        (SELECT json_agg(DISTINCT family_name)
+                         FROM certification_nomenclature
+                         WHERE certification_requirement_code = requirement_code
+                           AND family_name IS NOT NULL),
+                        '[]'::JSON
+                    )
+                ) INTO classification_info;
+                
+                -- Build the comprehensive result
+                SELECT json_build_object(
+                    'requirementCode', requirement_code,
+                    'certificate', certificate_info,
+                    'commodity', commodity_info,
+                    'species', species_info,
+                    'classification', classification_info,
+                    'metadata', json_build_object(
+                        'generatedAt', CURRENT_TIMESTAMP,
+                        'version', '1.0'
+                    )
+                ) INTO result_json;
+                
+                RETURN result_json;
+            END;
+            $$ LANGUAGE plpgsql;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR);
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Function to get commodity hierarchy -->
+    <changeSet id="postgresql-functions-04-create-commodity-hierarchy-function" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            CREATE OR REPLACE FUNCTION fn_get_commodity_hierarchy(input_commodity_code VARCHAR(100))
+            RETURNS JSON AS $$
+            DECLARE
+                result_json JSON;
+                current_code VARCHAR(100);
+                hierarchy_array JSON[];
+                counter INTEGER := 0;
+                max_depth INTEGER := 20; -- Prevent infinite loops
+            BEGIN
+                current_code := input_commodity_code;
+                hierarchy_array := ARRAY[]::JSON[];
+                
+                -- Build hierarchy by following parent relationships
+                WHILE current_code IS NOT NULL AND counter < max_depth LOOP
+                    -- Add current level to hierarchy
+                    SELECT array_append(
+                        hierarchy_array,
+                        json_build_object(
+                            'code', cn.traces_commodity_code,
+                            'description', cn.traces_commodity_code_description,
+                            'parentCode', cn.commodity_nomenclature_parent_code,
+                            'level', counter,
+                            'sortingKey', cn.sorting_key
+                        )
+                    ) INTO hierarchy_array
+                    FROM commodity_nomenclature cn
+                    WHERE cn.traces_commodity_code = current_code;
+                    
+                    -- Get parent for next iteration
+                    SELECT cn.commodity_nomenclature_parent_code INTO current_code
+                    FROM commodity_nomenclature cn
+                    WHERE cn.traces_commodity_code = current_code;
+                    
+                    counter := counter + 1;
+                END LOOP;
+                
+                -- Convert array to JSON
+                SELECT json_build_object(
+                    'inputCode', input_commodity_code,
+                    'depth', array_length(hierarchy_array, 1),
+                    'hierarchy', array_to_json(hierarchy_array)
+                ) INTO result_json;
+                
+                RETURN result_json;
+            END;
+            $$ LANGUAGE plpgsql;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS fn_get_commodity_hierarchy(VARCHAR);
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Function to validate commodity configuration -->
+    <changeSet id="postgresql-functions-05-create-commodity-validation-function" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            CREATE OR REPLACE FUNCTION fn_validate_commodity_configuration(
+                commodity_code VARCHAR(13),
+                commodity_type VARCHAR(10)
+            ) RETURNS JSON AS $$
+            DECLARE
+                validation_result JSON;
+                commodity_exists BOOLEAN;
+                config_exists BOOLEAN;
+                attributes_exist BOOLEAN;
+                errors TEXT[];
+                warnings TEXT[];
+            BEGIN
+                -- Initialize arrays
+                errors := ARRAY[]::TEXT[];
+                warnings := ARRAY[]::TEXT[];
+                
+                -- Check if commodity exists
+                SELECT EXISTS(
+                    SELECT 1 FROM commodity_nomenclature 
+                    WHERE traces_commodity_code = commodity_code
+                ) INTO commodity_exists;
+                
+                IF NOT commodity_exists THEN
+                    errors := array_append(errors, 'Commodity code does not exist in nomenclature');
+                END IF;
+                
+                -- Check if configuration exists
+                SELECT EXISTS(
+                    SELECT 1 FROM commodity_configuration 
+                    WHERE commodity_configuration.commodity_code = fn_validate_commodity_configuration.commodity_code
+                    AND commodity_configuration.type = commodity_type
+                ) INTO config_exists;
+                
+                IF NOT config_exists THEN
+                    warnings := array_append(warnings, 'No configuration found for this commodity and type combination');
+                END IF;
+                
+                -- Check if attributes exist
+                SELECT EXISTS(
+                    SELECT 1 FROM commoditycode_attributes 
+                    WHERE traces_commodity_code = commodity_code
+                    AND is_deleted = FALSE
+                    AND (effective_to IS NULL OR effective_to > CURRENT_TIMESTAMP)
+                ) INTO attributes_exist;
+                
+                IF NOT attributes_exist THEN
+                    warnings := array_append(warnings, 'No active attributes found for this commodity');
+                END IF;
+                
+                -- Build result
+                SELECT json_build_object(
+                    'commodityCode', commodity_code,
+                    'commodityType', commodity_type,
+                    'valid', (array_length(errors, 1) IS NULL),
+                    'errors', array_to_json(errors),
+                    'warnings', array_to_json(warnings),
+                    'checks', json_build_object(
+                        'commodityExists', commodity_exists,
+                        'configurationExists', config_exists,
+                        'attributesExist', attributes_exist
+                    ),
+                    'validatedAt', CURRENT_TIMESTAMP
+                ) INTO validation_result;
+                
+                RETURN validation_result;
+            END;
+            $$ LANGUAGE plpgsql;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS fn_validate_commodity_configuration(VARCHAR, VARCHAR);
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Add function comments for documentation -->
+    <changeSet id="postgresql-functions-06-add-function-comments" author="consolidated-migration" dbms="postgresql">
+        <sql>
+            COMMENT ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS 'Generates JSON data structure for commodity categories with species and classification information';
+            COMMENT ON FUNCTION RIGHT(TEXT, INTEGER) IS 'PostgreSQL implementation of SQL Server RIGHT string function';
+            COMMENT ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS 'Enhanced version of commodity category data function with additional business logic and metadata';
+            COMMENT ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) IS 'Returns the complete hierarchy path for a given commodity code';
+            COMMENT ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) IS 'Validates commodity configuration and returns validation results with errors and warnings';
+        </sql>
+        <rollback>
+            <sql>
+                COMMENT ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS NULL;
+                COMMENT ON FUNCTION RIGHT(TEXT, INTEGER) IS NULL;
+                COMMENT ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS NULL;
+                COMMENT ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) IS NULL;
+                COMMENT ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) IS NULL;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

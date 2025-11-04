@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- ============================================================================ -->
+    <!-- PostgreSQL Additional Database Objects Changelog -->
+    <!-- ============================================================================ -->
+
+    <!-- Create triggers for audit logging -->
+    <changeSet id="postgresql-additional-01-create-audit-trigger-function" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            CREATE OR REPLACE FUNCTION audit_trigger_function()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                -- Update the last_updated timestamp for tables that have this column
+                IF TG_OP = 'UPDATE' AND TG_TABLE_NAME = 'commoditycode_attributes' THEN
+                    NEW.last_updated = CURRENT_TIMESTAMP;
+                    RETURN NEW;
+                END IF;
+                
+                -- For other operations, just return the record
+                IF TG_OP = 'DELETE' THEN
+                    RETURN OLD;
+                ELSE
+                    RETURN NEW;
+                END IF;
+            END;
+            $$ LANGUAGE plpgsql;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS audit_trigger_function();
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Create trigger on commoditycode_attributes for automatic timestamp updates -->
+    <changeSet id="postgresql-additional-02-create-commoditycode-attributes-trigger" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            CREATE TRIGGER trg_commoditycode_attributes_audit
+                BEFORE UPDATE ON commoditycode_attributes
+                FOR EACH ROW
+                EXECUTE FUNCTION audit_trigger_function();
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP TRIGGER IF EXISTS trg_commoditycode_attributes_audit ON commoditycode_attributes;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Create data validation constraints -->
+    <changeSet id="postgresql-additional-03-create-data-validation-constraints" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Add check constraint for commodity code format
+            ALTER TABLE commodity_nomenclature 
+            ADD CONSTRAINT chk_traces_commodity_code_format 
+            CHECK (traces_commodity_code ~ '^[0-9]{1,8}(\.[0-9]{1,2})?$' OR traces_commodity_code IS NULL);
+            
+            -- Add check constraint for certificate validity dates
+            ALTER TABLE certificates 
+            ADD CONSTRAINT chk_certificate_dates 
+            CHECK (effective_to IS NULL OR effective_to > effective_from);
+            
+            -- Add check constraint for species dates
+            ALTER TABLE species 
+            ADD CONSTRAINT chk_species_dates 
+            CHECK (effective_to IS NULL OR effective_to > effective_from);
+            
+            -- Add check constraint for commodity configuration type
+            ALTER TABLE commodity_configuration 
+            ADD CONSTRAINT chk_commodity_config_type 
+            CHECK (type IN ('CVED-A', 'CVED-P', 'CED', 'IMP', 'CHED-PP'));
+            
+            -- Add check constraint for commodity attributes effective dates
+            ALTER TABLE commoditycode_attributes 
+            ADD CONSTRAINT chk_commodity_attributes_dates 
+            CHECK (effective_to IS NULL OR effective_to > effective_from);
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                ALTER TABLE commodity_nomenclature DROP CONSTRAINT IF EXISTS chk_traces_commodity_code_format;
+                ALTER TABLE certificates DROP CONSTRAINT IF EXISTS chk_certificate_dates;
+                ALTER TABLE species DROP CONSTRAINT IF EXISTS chk_species_dates;
+                ALTER TABLE commodity_configuration DROP CONSTRAINT IF EXISTS chk_commodity_config_type;
+                ALTER TABLE commoditycode_attributes DROP CONSTRAINT IF EXISTS chk_commodity_attributes_dates;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Create custom data types -->
+    <changeSet id="postgresql-additional-04-create-custom-types" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Create enum type for certificate types
+            CREATE TYPE certificate_type_enum AS ENUM (
+                'CVED-A', 'CVED-P', 'CED', 'IMP', 'CHED-PP'
+            );
+            
+            -- Create composite type for commodity hierarchy info
+            CREATE TYPE commodity_hierarchy_level AS (
+                code VARCHAR(100),
+                description TEXT,
+                level INTEGER,
+                parent_code VARCHAR(100)
+            );
+            
+            -- Create enum type for commodity configuration types
+            CREATE TYPE commodity_config_type_enum AS ENUM (
+                'CVED-A', 'CVED-P', 'CED', 'IMP', 'CHED-PP'
+            );
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP TYPE IF EXISTS certificate_type_enum CASCADE;
+                DROP TYPE IF EXISTS commodity_hierarchy_level CASCADE;
+                DROP TYPE IF EXISTS commodity_config_type_enum CASCADE;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Create utility sequences -->
+    <changeSet id="postgresql-additional-05-create-utility-sequences" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Create sequence for generating unique batch IDs for data loading
+            CREATE SEQUENCE seq_data_load_batch_id
+                START WITH 1
+                INCREMENT BY 1
+                NO MAXVALUE
+                NO MINVALUE
+                CACHE 1;
+            
+            -- Create sequence for generating temporary IDs
+            CREATE SEQUENCE seq_temp_id
+                START WITH 1000000
+                INCREMENT BY 1
+                NO MAXVALUE
+                NO MINVALUE
+                CACHE 10;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP SEQUENCE IF EXISTS seq_data_load_batch_id;
+                DROP SEQUENCE IF EXISTS seq_temp_id;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Create utility stored procedures for data management -->
+    <changeSet id="postgresql-additional-06-create-utility-procedures" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Procedure to cleanup old data load records
+            CREATE OR REPLACE FUNCTION sp_cleanup_old_data_loads(days_to_keep INTEGER DEFAULT 90)
+            RETURNS INTEGER AS $$
+            DECLARE
+                deleted_count INTEGER;
+            BEGIN
+                DELETE FROM data_load 
+                WHERE loaded < CURRENT_TIMESTAMP - INTERVAL '1 day' * days_to_keep;
+                
+                GET DIAGNOSTICS deleted_count = ROW_COUNT;
+                
+                RETURN deleted_count;
+            END;
+            $$ LANGUAGE plpgsql;
+            
+            -- Procedure to archive deleted commodity attributes
+            CREATE OR REPLACE FUNCTION sp_archive_deleted_attributes()
+            RETURNS INTEGER AS $$
+            DECLARE
+                archived_count INTEGER := 0;
+            BEGIN
+                -- This would typically move records to an archive table
+                -- For now, we'll just count the records that would be archived
+                SELECT COUNT(*) INTO archived_count
+                FROM commoditycode_attributes
+                WHERE is_deleted = TRUE
+                AND last_updated < CURRENT_TIMESTAMP - INTERVAL '1 year';
+                
+                -- In a real implementation, you would:
+                -- 1. INSERT INTO commoditycode_attributes_archive SELECT * FROM commoditycode_attributes WHERE...
+                -- 2. DELETE FROM commoditycode_attributes WHERE...
+                
+                RETURN archived_count;
+            END;
+            $$ LANGUAGE plpgsql;
+            
+            -- Function to get database statistics
+            CREATE OR REPLACE FUNCTION fn_get_database_statistics()
+            RETURNS JSON AS $$
+            DECLARE
+                stats_json JSON;
+            BEGIN
+                SELECT json_build_object(
+                    'tables', json_build_object(
+                        'commodity_nomenclature', (SELECT COUNT(*) FROM commodity_nomenclature),
+                        'certificates', (SELECT COUNT(*) FROM certificates),
+                        'species', (SELECT COUNT(*) FROM species),
+                        'certification_requirement', (SELECT COUNT(*) FROM certification_requirement),
+                        'certification_nomenclature', (SELECT COUNT(*) FROM certification_nomenclature),
+                        'commodity_group', (SELECT COUNT(*) FROM commodity_group WHERE is_deleted = FALSE),
+                        'commodity_group_commodity', (SELECT COUNT(*) FROM commodity_group_commodity WHERE is_deleted = FALSE),
+                        'commoditycode_attributes', (SELECT COUNT(*) FROM commoditycode_attributes WHERE is_deleted = FALSE)
+                    ),
+                    'data_loads', json_build_object(
+                        'total_loads', (SELECT COUNT(*) FROM data_load),
+                        'latest_load', (SELECT MAX(loaded) FROM data_load)
+                    ),
+                    'generated_at', CURRENT_TIMESTAMP
+                ) INTO stats_json;
+                
+                RETURN stats_json;
+            END;
+            $$ LANGUAGE plpgsql;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS sp_cleanup_old_data_loads(INTEGER);
+                DROP FUNCTION IF EXISTS sp_archive_deleted_attributes();
+                DROP FUNCTION IF EXISTS fn_get_database_statistics();
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Create materialized views for performance -->
+    <changeSet id="postgresql-additional-07-create-materialized-views" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Materialized view for commodity code summary statistics
+            CREATE MATERIALIZED VIEW mv_commodity_code_stats AS
+            SELECT 
+                c.short_description AS certificate_type,
+                COUNT(DISTINCT cn.traces_commodity_code) AS total_commodities,
+                COUNT(DISTINCT CASE WHEN cr.is_selectable = TRUE THEN cn.traces_commodity_code END) AS selectable_commodities,
+                COUNT(DISTINCT cert_nom.species_code) AS total_species,
+                COUNT(DISTINCT CASE WHEN s.invasive_species_indicator = TRUE THEN cert_nom.species_code END) AS invasive_species
+            FROM certificates c
+            LEFT JOIN certification_requirement cr ON cr.certification_requirement_code = c.code
+            LEFT JOIN commodity_nomenclature cn ON cn.code = cr.commodity_nomenclature_id_code
+            LEFT JOIN certification_nomenclature cert_nom ON cert_nom.certification_requirement_code = cr.code
+            LEFT JOIN species s ON s.code = cert_nom.species_code
+            WHERE cr.is_traces_visible = TRUE
+            GROUP BY c.code, c.short_description;
+            
+            -- Create unique index on materialized view
+            CREATE UNIQUE INDEX ix_mv_commodity_code_stats_cert_type 
+            ON mv_commodity_code_stats(certificate_type);
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP MATERIALIZED VIEW IF EXISTS mv_commodity_code_stats;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Create ETL helper functions -->
+    <changeSet id="postgresql-additional-08-create-etl-helper-functions" author="consolidated-migration">
+        <sql dbms="postgresql">
+            <![CDATA[
+            -- Function to log data load operations
+            CREATE OR REPLACE FUNCTION fn_log_data_load(
+                p_table_name VARCHAR(100),
+                p_file_name VARCHAR(265),
+                p_load_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) RETURNS BIGINT AS $$
+            DECLARE
+                load_id BIGINT;
+            BEGIN
+                INSERT INTO data_load (loaded, file_name, table_name)
+                VALUES (p_load_timestamp, p_file_name, p_table_name)
+                RETURNING id INTO load_id;
+                
+                RETURN load_id;
+            END;
+            $$ LANGUAGE plpgsql;
+            
+            -- Function to convert SQL Server data types during ETL
+            CREATE OR REPLACE FUNCTION fn_convert_sql_server_datetime(
+                sql_server_datetime TEXT
+            ) RETURNS TIMESTAMP AS $$
+            BEGIN
+                -- Handle SQL Server datetime format conversion
+                IF sql_server_datetime IS NULL OR sql_server_datetime = '' THEN
+                    RETURN NULL;
+                END IF;
+                
+                -- Convert SQL Server datetime to PostgreSQL timestamp
+                -- This is a simplified conversion - adjust based on your specific format
+                RETURN sql_server_datetime::TIMESTAMP;
+            EXCEPTION
+                WHEN OTHERS THEN
+                    RETURN NULL;
+            END;
+            $$ LANGUAGE plpgsql;
+            
+            -- Function to validate commodity code during ETL
+            CREATE OR REPLACE FUNCTION fn_validate_commodity_code_format(
+                commodity_code VARCHAR(100)
+            ) RETURNS BOOLEAN AS $$
+            BEGIN
+                -- Validate commodity code format (adjust regex as needed)
+                RETURN commodity_code ~ '^[0-9]{1,8}(\.[0-9]{1,2})?$';
+            END;
+            $$ LANGUAGE plpgsql IMMUTABLE;
+            ]]>
+        </sql>
+        <rollback>
+            <sql dbms="postgresql">
+                DROP FUNCTION IF EXISTS fn_log_data_load(VARCHAR, VARCHAR, TIMESTAMP);
+                DROP FUNCTION IF EXISTS fn_convert_sql_server_datetime(TEXT);
+                DROP FUNCTION IF EXISTS fn_validate_commodity_code_format(VARCHAR);
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Add table and object comments for documentation -->
+    <changeSet id="postgresql-additional-09-add-comprehensive-comments" author="consolidated-migration" dbms="postgresql">
+        <sql>
+            -- Table comments
+            COMMENT ON TABLE certificates IS 'Certificate types and descriptions for commodity classifications';
+            COMMENT ON TABLE commodity_nomenclature IS 'Core commodity nomenclature with hierarchical structure and TRACES codes';
+            COMMENT ON TABLE species IS 'Species reference data with EPPO codes and invasive species indicators';
+            COMMENT ON TABLE certification_requirement IS 'Links commodities to required certificates with visibility controls';
+            COMMENT ON TABLE certification_nomenclature IS 'Species-specific certification requirements with classification hierarchy';
+            COMMENT ON TABLE commodity_class IS 'Commodity classification data for regulatory purposes';
+            COMMENT ON TABLE commodity_eppo_variety IS 'EPPO codes and varieties for commodities';
+            COMMENT ON TABLE hmi_marketing IS 'HMI marketing standards and certificate validity periods';
+            COMMENT ON TABLE inspection_responsibility IS 'Inspection responsibility assignments by commodity and intended use';
+            COMMENT ON TABLE commodity_group IS 'Commodity grouping definitions for business categorization';
+            COMMENT ON TABLE commodity_group_commodity IS 'Individual commodities within business groups';
+            COMMENT ON TABLE article_72_commodities IS 'Article 72 specific commodities for regulatory compliance';
+            COMMENT ON TABLE commodity_configuration IS 'Commodity configuration settings including test and trial requirements';
+            COMMENT ON TABLE commoditycode_attributes IS 'Extended attributes for commodity codes with effective date management';
+            COMMENT ON TABLE data_load IS 'Data loading audit trail for ETL operations';
+            
+            -- Sequence comments
+            COMMENT ON SEQUENCE seq_data_load_batch_id IS 'Generates unique batch IDs for data loading operations';
+            COMMENT ON SEQUENCE seq_temp_id IS 'Generates temporary IDs for data processing';
+            
+            -- Type comments
+            COMMENT ON TYPE certificate_type_enum IS 'Enumeration of valid certificate types';
+            COMMENT ON TYPE commodity_hierarchy_level IS 'Composite type for commodity hierarchy information';
+            COMMENT ON TYPE commodity_config_type_enum IS 'Enumeration of valid commodity configuration types';
+            
+            -- Function comments
+            COMMENT ON FUNCTION audit_trigger_function() IS 'Trigger function for automatic timestamp updates and audit logging';
+            COMMENT ON FUNCTION sp_cleanup_old_data_loads(INTEGER) IS 'Procedure to cleanup old data load records based on retention period';
+            COMMENT ON FUNCTION sp_archive_deleted_attributes() IS 'Procedure to archive deleted commodity attributes';
+            COMMENT ON FUNCTION fn_get_database_statistics() IS 'Returns comprehensive database statistics as JSON';
+            COMMENT ON FUNCTION fn_log_data_load(VARCHAR, VARCHAR, TIMESTAMP) IS 'Logs data load operations for audit trail';
+            COMMENT ON FUNCTION fn_convert_sql_server_datetime(TEXT) IS 'Converts SQL Server datetime format to PostgreSQL timestamp';
+            COMMENT ON FUNCTION fn_validate_commodity_code_format(VARCHAR) IS 'Validates commodity code format using regex pattern';
+            
+            -- Materialized view comments
+            COMMENT ON MATERIALIZED VIEW mv_commodity_code_stats IS 'Materialized view containing commodity code summary statistics for reporting';
+        </sql>
+        <rollback>
+            <sql>
+                -- Remove all comments
+                COMMENT ON TABLE certificates IS NULL;
+                COMMENT ON TABLE commodity_nomenclature IS NULL;
+                COMMENT ON TABLE species IS NULL;
+                COMMENT ON TABLE certification_requirement IS NULL;
+                COMMENT ON TABLE certification_nomenclature IS NULL;
+                COMMENT ON TABLE commodity_class IS NULL;
+                COMMENT ON TABLE commodity_eppo_variety IS NULL;
+                COMMENT ON TABLE hmi_marketing IS NULL;
+                COMMENT ON TABLE inspection_responsibility IS NULL;
+                COMMENT ON TABLE commodity_group IS NULL;
+                COMMENT ON TABLE commodity_group_commodity IS NULL;
+                COMMENT ON TABLE article_72_commodities IS NULL;
+                COMMENT ON TABLE commodity_configuration IS NULL;
+                COMMENT ON TABLE commoditycode_attributes IS NULL;
+                COMMENT ON TABLE data_load IS NULL;
+                
+                COMMENT ON SEQUENCE seq_data_load_batch_id IS NULL;
+                COMMENT ON SEQUENCE seq_temp_id IS NULL;
+                
+                COMMENT ON TYPE certificate_type_enum IS NULL;
+                COMMENT ON TYPE commodity_hierarchy_level IS NULL;
+                COMMENT ON TYPE commodity_config_type_enum IS NULL;
+                
+                COMMENT ON FUNCTION audit_trigger_function() IS NULL;
+                COMMENT ON FUNCTION sp_cleanup_old_data_loads(INTEGER) IS NULL;
+                COMMENT ON FUNCTION sp_archive_deleted_attributes() IS NULL;
+                COMMENT ON FUNCTION fn_get_database_statistics() IS NULL;
+                COMMENT ON FUNCTION fn_log_data_load(VARCHAR, VARCHAR, TIMESTAMP) IS NULL;
+                COMMENT ON FUNCTION fn_convert_sql_server_datetime(TEXT) IS NULL;
+                COMMENT ON FUNCTION fn_validate_commodity_code_format(VARCHAR) IS NULL;
+                
+                COMMENT ON MATERIALIZED VIEW mv_commodity_code_stats IS NULL;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
