@@ -11,13 +11,15 @@
 
     <!-- Function to generate commodity category data as JSON -->
     <changeSet id="postgresql-functions-01-create-commodity-category-data-function" author="consolidated-migration">
-        <sql dbms="postgresql">
+        <sql dbms="postgresql" endDelimiter="/">
             <![CDATA[
             CREATE OR REPLACE FUNCTION fn_commodity_category_data(
                 requirement_code VARCHAR(250),
                 certificate_code VARCHAR(250), 
                 traces_commodity_code VARCHAR(100)
-            ) RETURNS TEXT AS $$
+            ) RETURNS TEXT
+                LANGUAGE plpgsql
+                AS $$
             DECLARE
                 result_json TEXT;
                 types_array JSON;
@@ -117,19 +119,14 @@
                 
                 RETURN result_json;
             END;
-            $$ LANGUAGE plpgsql;
+            $$;
             ]]>
         </sql>
-        <rollback>
-            <sql dbms="postgresql">
-                DROP FUNCTION IF EXISTS fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR);
-            </sql>
-        </rollback>
     </changeSet>
 
     <!-- Utility function for RIGHT string function (PostgreSQL doesn't have RIGHT) -->
     <changeSet id="postgresql-functions-02-create-right-string-function" author="consolidated-migration">
-        <sql dbms="postgresql">
+        <sql dbms="postgresql" endDelimiter="/">
             <![CDATA[
             CREATE OR REPLACE FUNCTION RIGHT(input_string TEXT, length_param INTEGER) 
             RETURNS TEXT AS $$
@@ -147,16 +144,11 @@
             $$ LANGUAGE plpgsql IMMUTABLE;
             ]]>
         </sql>
-        <rollback>
-            <sql dbms="postgresql">
-                DROP FUNCTION IF EXISTS RIGHT(TEXT, INTEGER);
-            </sql>
-        </rollback>
-    </changeSet>
+     </changeSet>
 
     <!-- Enhanced commodity category data function with additional business logic -->
     <changeSet id="postgresql-functions-03-create-enhanced-commodity-category-function" author="consolidated-migration">
-        <sql dbms="postgresql">
+        <sql dbms="postgresql" endDelimiter="/">
             <![CDATA[
             CREATE OR REPLACE FUNCTION fn_enhanced_commodity_category_data(
                 requirement_code VARCHAR(250),
@@ -254,16 +246,11 @@
             $$ LANGUAGE plpgsql;
             ]]>
         </sql>
-        <rollback>
-            <sql dbms="postgresql">
-                DROP FUNCTION IF EXISTS fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR);
-            </sql>
-        </rollback>
     </changeSet>
 
     <!-- Function to get commodity hierarchy -->
     <changeSet id="postgresql-functions-04-create-commodity-hierarchy-function" author="consolidated-migration">
-        <sql dbms="postgresql">
+        <sql dbms="postgresql" endDelimiter="/">
             <![CDATA[
             CREATE OR REPLACE FUNCTION fn_get_commodity_hierarchy(input_commodity_code VARCHAR(100))
             RETURNS JSON AS $$
@@ -313,16 +300,11 @@
             $$ LANGUAGE plpgsql;
             ]]>
         </sql>
-        <rollback>
-            <sql dbms="postgresql">
-                DROP FUNCTION IF EXISTS fn_get_commodity_hierarchy(VARCHAR);
-            </sql>
-        </rollback>
     </changeSet>
 
     <!-- Function to validate commodity configuration -->
     <changeSet id="postgresql-functions-05-create-commodity-validation-function" author="consolidated-migration">
-        <sql dbms="postgresql">
+        <sql dbms="postgresql" endDelimiter="/">
             <![CDATA[
             CREATE OR REPLACE FUNCTION fn_validate_commodity_configuration(
                 commodity_code VARCHAR(13),
@@ -393,11 +375,6 @@
             $$ LANGUAGE plpgsql;
             ]]>
         </sql>
-        <rollback>
-            <sql dbms="postgresql">
-                DROP FUNCTION IF EXISTS fn_validate_commodity_configuration(VARCHAR, VARCHAR);
-            </sql>
-        </rollback>
     </changeSet>
 
     <!-- Add function comments for documentation -->
@@ -409,15 +386,6 @@
             COMMENT ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) IS 'Returns the complete hierarchy path for a given commodity code';
             COMMENT ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) IS 'Validates commodity configuration and returns validation results with errors and warnings';
         </sql>
-        <rollback>
-            <sql>
-                COMMENT ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS NULL;
-                COMMENT ON FUNCTION RIGHT(TEXT, INTEGER) IS NULL;
-                COMMENT ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS NULL;
-                COMMENT ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) IS NULL;
-                COMMENT ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) IS NULL;
-            </sql>
-        </rollback>
     </changeSet>
 
 </databaseChangeLog>

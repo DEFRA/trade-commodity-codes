@@ -24,7 +24,7 @@
          * For Azure Managed Identity: CREATE USER "identity-name" FROM EXTERNAL PROVIDER;
          * For database auth: CREATE USER username WITH PASSWORD 'password';
          * For LDAP/AD: Configure according to your setup
-       - Then uncomment role assignments in 04-permissions-changelog.xml
+       - Then uncomment role assignments in 05-permissions-changelog.xml
     
     3. Execution:
        - Run: liquibase update
@@ -47,110 +47,100 @@
     <include file="changes/01-tables-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 2. Functions (required before views that use them) -->
-    <include file="changes/03-functions-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/02-functions-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 3. Views (depend on tables and functions) -->
-    <include file="changes/02-views-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/03-views-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 4. Additional Objects (triggers, types, sequences, etc.) -->
-    <include file="changes/05-additional-objects-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/04-additional-objects-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 5. Permissions (must be last to grant access to all objects) -->
-    <include file="changes/04-permissions-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/05-permissions-changelog.xml" relativeToChangelogFile="true"/>
 
-<!--    &lt;!&ndash; Final validation and setup &ndash;&gt;-->
-<!--    <changeSet id="postgresql-master-01-final-setup" author="consolidated-migration" runOnChange="true">-->
-<!--        <sql dbms="postgresql">-->
-<!--            <![CDATA[-->
-<!--            &#45;&#45; Refresh materialized views-->
-<!--            REFRESH MATERIALIZED VIEW mv_commodity_code_stats;-->
-<!--            -->
-<!--            &#45;&#45; Create initial data load record for tracking-->
-<!--            INSERT INTO data_load (loaded, file_name, table_name) -->
-<!--            VALUES (CURRENT_TIMESTAMP, 'initial-postgresql-migration', 'migration_complete')-->
-<!--            ON CONFLICT (table_name) DO NOTHING;-->
-<!--            -->
-<!--            &#45;&#45; Generate initial database statistics-->
-<!--            SELECT fn_get_database_statistics() AS initial_stats;-->
-<!--            ]]>-->
-<!--        </sql>-->
-<!--        <rollback>-->
-<!--            <sql dbms="postgresql">-->
-<!--                DELETE FROM data_load WHERE table_name = 'migration_complete';-->
-<!--            </sql>-->
-<!--        </rollback>-->
-<!--    </changeSet>-->
+    <!-- Final validation and setup -->
+    <changeSet id="postgresql-master-01-final-setup" author="consolidated-migration" runOnChange="true">
+        <sql dbms="postgresql" endDelimiter="/">
+            <![CDATA[
+            -- Refresh materialized views
+            REFRESH MATERIALIZED VIEW mv_commodity_code_stats;
 
-<!--    &lt;!&ndash; Migration validation changelog &ndash;&gt;-->
-<!--    <changeSet id="postgresql-master-02-migration-validation" author="consolidated-migration" runOnChange="true">-->
-<!--        <sql dbms="postgresql">-->
-<!--            <![CDATA[-->
-<!--            &#45;&#45; Validate core tables exist and have data structure-->
-<!--            DO $$-->
-<!--            DECLARE-->
-<!--                table_count INTEGER;-->
-<!--                view_count INTEGER;-->
-<!--                function_count INTEGER;-->
-<!--                role_count INTEGER;-->
-<!--            BEGIN-->
-<!--                &#45;&#45; Count core tables-->
-<!--                SELECT COUNT(*) INTO table_count -->
-<!--                FROM information_schema.tables -->
-<!--                WHERE table_schema = 'public' -->
-<!--                AND table_type = 'BASE TABLE'-->
-<!--                AND table_name IN (-->
-<!--                    'certificates', 'commodity_nomenclature', 'species',-->
-<!--                    'certification_requirement', 'certification_nomenclature',-->
-<!--                    'commodity_class', 'commodity_eppo_variety', 'hmi_marketing',-->
-<!--                    'inspection_responsibility', 'commodity_group', 'commodity_group_commodity',-->
-<!--                    'article_72_commodities', 'commodity_configuration', 'commoditycode_attributes',-->
-<!--                    'data_load'-->
-<!--                );-->
-<!--                -->
-<!--                &#45;&#45; Count views-->
-<!--                SELECT COUNT(*) INTO view_count -->
-<!--                FROM information_schema.views -->
-<!--                WHERE table_schema = 'public'-->
-<!--                AND table_name LIKE 'v_%';-->
-<!--                -->
-<!--                &#45;&#45; Count functions-->
-<!--                SELECT COUNT(*) INTO function_count -->
-<!--                FROM information_schema.routines -->
-<!--                WHERE routine_schema = 'public'-->
-<!--                AND routine_type = 'FUNCTION'-->
-<!--                AND routine_name LIKE 'fn_%';-->
-<!--                -->
-<!--                &#45;&#45; Count roles-->
-<!--                SELECT COUNT(*) INTO role_count -->
-<!--                FROM pg_roles -->
-<!--                WHERE rolname LIKE 'commodity_%';-->
-<!--                -->
-<!--                &#45;&#45; Log validation results-->
-<!--                RAISE NOTICE 'Migration Validation Results:';-->
-<!--                RAISE NOTICE 'Tables created: % of 15 expected', table_count;-->
-<!--                RAISE NOTICE 'Views created: %', view_count;-->
-<!--                RAISE NOTICE 'Functions created: %', function_count;-->
-<!--                RAISE NOTICE 'Roles created: %', role_count;-->
-<!--                -->
-<!--                &#45;&#45; Validate minimum requirements-->
-<!--                IF table_count < 15 THEN-->
-<!--                    RAISE EXCEPTION 'Migration validation failed: Expected 15 tables, found %', table_count;-->
-<!--                END IF;-->
-<!--                -->
-<!--                IF view_count < 9 THEN-->
-<!--                    RAISE WARNING 'Low view count: Expected 9+ views, found %', view_count;-->
-<!--                END IF;-->
-<!--                -->
-<!--                RAISE NOTICE 'Migration validation completed successfully!';-->
-<!--            END-->
-<!--            $$;-->
-<!--            ]]>-->
-<!--        </sql>-->
-<!--        <rollback>-->
-<!--            <sql>-->
-<!--                &#45;&#45; No rollback needed for validation-->
-<!--            </sql>-->
-<!--        </rollback>-->
-<!--    </changeSet>-->
+            -- Create initial data load record for tracking
+            INSERT INTO data_load (loaded, file_name, table_name)
+            VALUES (CURRENT_TIMESTAMP, 'initial-postgresql-migration', 'migration_complete')
+            ON CONFLICT (table_name) DO NOTHING;
+
+            -- Generate initial database statistics
+            SELECT fn_get_database_statistics() AS initial_stats;
+            ]]>
+        </sql>
+    </changeSet>
+
+    <!-- Migration validation changelog -->
+    <changeSet id="postgresql-master-02-migration-validation" author="consolidated-migration" runOnChange="true">
+        <sql dbms="postgresql" endDelimiter="/">
+            <![CDATA[
+            -- Validate core tables exist and have data structure
+            DO $$
+            DECLARE
+                table_count INTEGER;
+                view_count INTEGER;
+                function_count INTEGER;
+                role_count INTEGER;
+            BEGIN
+                -- Count core tables
+                SELECT COUNT(*) INTO table_count
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_type = 'BASE TABLE'
+                AND table_name IN (
+                    'certificates', 'commodity_nomenclature', 'species',
+                    'certification_requirement', 'certification_nomenclature',
+                    'commodity_class', 'commodity_eppo_variety', 'hmi_marketing',
+                    'inspection_responsibility', 'commodity_group', 'commodity_group_commodity',
+                    'article_72_commodities', 'commodity_configuration', 'commoditycode_attributes',
+                    'data_load'
+                );
+
+                -- Count views
+                SELECT COUNT(*) INTO view_count
+                FROM information_schema.views
+                WHERE table_schema = 'public'
+                AND table_name LIKE 'v_%';
+
+                -- Count functions
+                SELECT COUNT(*) INTO function_count
+                FROM information_schema.routines
+                WHERE routine_schema = 'public'
+                AND routine_type = 'FUNCTION'
+                AND routine_name LIKE 'fn_%';
+
+                -- Count roles
+                SELECT COUNT(*) INTO role_count
+                FROM pg_roles
+                WHERE rolname LIKE 'commodity_%';
+
+                -- Log validation results
+                RAISE NOTICE 'Migration Validation Results:';
+                RAISE NOTICE 'Tables created: % of 15 expected', table_count;
+                RAISE NOTICE 'Views created: %', view_count;
+                RAISE NOTICE 'Functions created: %', function_count;
+                RAISE NOTICE 'Roles created: %', role_count;
+
+                -- Validate minimum requirements
+                IF table_count < 15 THEN
+                    RAISE EXCEPTION 'Migration validation failed: Expected 15 tables, found %', table_count;
+                END IF;
+
+                IF view_count < 9 THEN
+                    RAISE WARNING 'Low view count: Expected 9+ views, found %', view_count;
+                END IF;
+
+                RAISE NOTICE 'Migration validation completed successfully!';
+            END
+            $$;
+            ]]>
+        </sql>
+     </changeSet>
 
 </databaseChangeLog>

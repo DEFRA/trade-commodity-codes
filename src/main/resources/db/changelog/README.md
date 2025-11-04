@@ -8,10 +8,10 @@ This directory contains consolidated Liquibase XML changelog files for migrating
 
 1. **`master-changelog.xml`** - Main entry point that includes all other changelogs in the correct order
 2. **`01-tables-changelog.xml`** - All table structures, constraints, and indexes
-3. **`02-views-changelog.xml`** - All database views for data access
-4. **`03-functions-changelog.xml`** - All stored functions and procedures
-5. **`04-permissions-changelog.xml`** - Complete role-based security model
-6. **`05-additional-objects-changelog.xml`** - Triggers, types, sequences, and ETL utilities
+3. **`02-functions-changelog.xml`** - All stored functions and procedures
+4. **`03-views-changelog.xml`** - All database views for data access
+5. **`04-additional-objects-changelog.xml`** - Triggers, types, sequences, and ETL utilities
+6. **`05-permissions-changelog.xml`** - Complete role-based security model
 
 ### Execution Order
 
@@ -19,10 +19,10 @@ The changelogs must be executed in this specific order (handled automatically by
 
 ```
 1. Tables & Constraints    (01-tables-changelog.xml)
-2. Functions               (03-functions-changelog.xml)  
-3. Views                   (02-views-changelog.xml)
-4. Additional Objects      (05-additional-objects-changelog.xml)
-5. Permissions            (04-permissions-changelog.xml)
+2. Functions               (02-functions-changelog.xml)  
+3. Views                   (03-views-changelog.xml)
+4. Additional Objects      (04-additional-objects-changelog.xml)
+5. Permissions             (05-permissions-changelog.xml)
 ```
 
 ## Quick Start

@@ -19,9 +19,6 @@
             <column name="effective_from" type="TIMESTAMP"/>
             <column name="effective_to" type="TIMESTAMP"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="certificates"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-02-create-commodity-nomenclature-table" author="consolidated-migration">
@@ -38,9 +35,6 @@
             <column name="effective_from" type="TIMESTAMP"/>
             <column name="effective_to" type="TIMESTAMP"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="commodity_nomenclature"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-03-create-species-table" author="consolidated-migration">
@@ -57,9 +51,6 @@
             </column>
             <column name="eppo_code" type="VARCHAR(500)"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="species"/>
-        </rollback>
     </changeSet>
 
     <!-- Certification Tables -->
@@ -76,9 +67,6 @@
             <column name="effective_from" type="TIMESTAMP"/>
             <column name="effective_to" type="TIMESTAMP"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="certification_requirement"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-05-create-certification-nomenclature-table" author="consolidated-migration">
@@ -96,9 +84,6 @@
             <column name="effective_from" type="TIMESTAMP"/>
             <column name="effective_to" type="TIMESTAMP"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="certification_nomenclature"/>
-        </rollback>
     </changeSet>
 
     <!-- Commodity Data Tables -->
@@ -112,9 +97,6 @@
             <column name="effective_from" type="VARCHAR(255)"/>
             <column name="effective_to" type="VARCHAR(255)"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="commodity_class"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-07-create-commodity-eppo-variety-table" author="consolidated-migration">
@@ -128,9 +110,6 @@
             <column name="effective_from" type="VARCHAR(255)"/>
             <column name="effective_to" type="VARCHAR(255)"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="commodity_eppo_variety"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-08-create-hmi-marketing-table" author="consolidated-migration">
@@ -154,9 +133,6 @@
             </column>
             <column name="effective_to" type="TIMESTAMP"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="hmi_marketing"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-09-create-inspection-responsibility-table" author="consolidated-migration">
@@ -177,9 +153,6 @@
             </column>
             <column name="effective_to" type="TIMESTAMP"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="inspection_responsibility"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-10-create-commodity-group-table" author="consolidated-migration">
@@ -197,9 +170,6 @@
             <column name="effective_to" type="TIMESTAMP"/>
             <column name="is_deleted" type="BOOLEAN" defaultValueBoolean="false"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="commodity_group"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-11-create-commodity-group-commodity-table" author="consolidated-migration">
@@ -222,9 +192,6 @@
             <column name="last_chg_date_time" type="TIMESTAMP"/>
             <column name="is_deleted" type="BOOLEAN" defaultValueBoolean="false"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="commodity_group_commodity"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-12-create-article-72-commodities-table" author="consolidated-migration">
@@ -242,10 +209,7 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <rollback>
-            <dropTable tableName="article_72_commodities"/>
-        </rollback>
-    </changeSet>
+       </changeSet>
 
     <changeSet id="postgresql-13-create-commodity-configuration-table" author="consolidated-migration">
         <createTable tableName="commodity_configuration">
@@ -263,9 +227,6 @@
             </column>
             <column name="finished_or_propagated" type="VARCHAR(50)"/>
         </createTable>
-        <rollback>
-            <dropTable tableName="commodity_configuration"/>
-        </rollback>
     </changeSet>
 
     <changeSet id="postgresql-14-create-commoditycode-attributes-table" author="consolidated-migration">
@@ -288,9 +249,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <rollback>
-            <dropTable tableName="commoditycode_attributes"/>
-        </rollback>
     </changeSet>
 
     <!-- Data Loading and Management Tables -->
@@ -309,9 +267,6 @@
                 <constraints nullable="false" unique="true"/>
             </column>
         </createTable>
-        <rollback>
-            <dropTable tableName="data_load"/>
-        </rollback>
     </changeSet>
 
     <!-- Foreign Key Constraints -->
@@ -344,20 +299,13 @@
             referencedTableName="species"
             referencedColumnNames="code"/>
         
-        <addForeignKeyConstraint 
-            baseTableName="commodity_group_commodity"
-            baseColumnNames="commodity_group_code"
-            constraintName="fk_cgc_commodity_group"
-            referencedTableName="commodity_group"
-            referencedColumnNames="code"/>
+<!--        <addForeignKeyConstraint-->
+<!--            baseTableName="commodity_group_commodity"-->
+<!--            baseColumnNames="commodity_group_code"-->
+<!--            constraintName="fk_cgc_commodity_group"-->
+<!--            referencedTableName="commodity_group"-->
+<!--            referencedColumnNames="code"/>-->
         
-        <rollback>
-            <dropForeignKeyConstraint baseTableName="certification_requirement" constraintName="fk_cert_req_commodity_nomenclature"/>
-            <dropForeignKeyConstraint baseTableName="certification_requirement" constraintName="fk_cert_req_certificates"/>
-            <dropForeignKeyConstraint baseTableName="certification_nomenclature" constraintName="fk_cert_nom_cert_requirement"/>
-            <dropForeignKeyConstraint baseTableName="certification_nomenclature" constraintName="fk_cert_nom_species"/>
-            <dropForeignKeyConstraint baseTableName="commodity_group_commodity" constraintName="fk_cgc_commodity_group"/>
-        </rollback>
     </changeSet>
 
     <!-- Indexes for Performance -->
@@ -438,28 +386,6 @@
         <createIndex tableName="commoditycode_attributes" indexName="ix_commoditycode_attributes_type">
             <column name="commodity_type"/>
         </createIndex>
-
-        <rollback>
-            <dropIndex tableName="commodity_nomenclature" indexName="ix_commodity_nomenclature_parent"/>
-            <dropIndex tableName="commodity_nomenclature" indexName="ix_commodity_nomenclature_traces"/>
-            <dropIndex tableName="certification_requirement" indexName="ix_certification_requirement_commodity"/>
-            <dropIndex tableName="certification_requirement" indexName="ix_certification_requirement_cert"/>
-            <dropIndex tableName="certification_requirement" indexName="ix_certification_requirement_parent"/>
-            <dropIndex tableName="certification_nomenclature" indexName="ix_certification_nomenclature_requirement"/>
-            <dropIndex tableName="certification_nomenclature" indexName="ix_certification_nomenclature_species"/>
-            <dropIndex tableName="commodity_class" indexName="ix_commodity_class_traces_code"/>
-            <dropIndex tableName="commodity_eppo_variety" indexName="ix_commodity_eppo_variety_traces_code"/>
-            <dropIndex tableName="commodity_eppo_variety" indexName="ix_commodity_eppo_variety_eppo_code"/>
-            <dropIndex tableName="hmi_marketing" indexName="ix_hmi_marketing_traces_code"/>
-            <dropIndex tableName="hmi_marketing" indexName="ix_hmi_marketing_eppo_code"/>
-            <dropIndex tableName="inspection_responsibility" indexName="ix_inspection_responsibility_traces_code"/>
-            <dropIndex tableName="inspection_responsibility" indexName="ix_inspection_responsibility_eppo_code"/>
-            <dropIndex tableName="commodity_group" indexName="ix_commodity_group_code"/>
-            <dropIndex tableName="commodity_group_commodity" indexName="ix_commodity_group_commodity_group_code"/>
-            <dropIndex tableName="commodity_group_commodity" indexName="ix_commodity_group_commodity_traces_code"/>
-            <dropIndex tableName="commoditycode_attributes" indexName="ix_commoditycode_attributes_traces_code"/>
-            <dropIndex tableName="commoditycode_attributes" indexName="ix_commoditycode_attributes_type"/>
-        </rollback>
     </changeSet>
 
 </databaseChangeLog>
