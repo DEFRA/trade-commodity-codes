@@ -44,19 +44,19 @@
     <!-- Include changelog files in execution order -->
     
     <!-- 1. Tables and Constraints -->
-    <include file="01-tables-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/01-tables-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 2. Functions (required before views that use them) -->
-    <include file="03-functions-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/03-functions-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 3. Views (depend on tables and functions) -->
-    <include file="02-views-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/02-views-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 4. Additional Objects (triggers, types, sequences, etc.) -->
-    <include file="05-additional-objects-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/05-additional-objects-changelog.xml" relativeToChangelogFile="true"/>
     
     <!-- 5. Permissions (must be last to grant access to all objects) -->
-    <include file="04-permissions-changelog.xml" relativeToChangelogFile="true"/>
+    <include file="changes/04-permissions-changelog.xml" relativeToChangelogFile="true"/>
 
 <!--    &lt;!&ndash; Final validation and setup &ndash;&gt;-->
 <!--    <changeSet id="postgresql-master-01-final-setup" author="consolidated-migration" runOnChange="true">-->
