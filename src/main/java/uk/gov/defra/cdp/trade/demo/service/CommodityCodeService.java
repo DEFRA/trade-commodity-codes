@@ -46,46 +46,6 @@ public class CommodityCodeService {
                 .orElseThrow(() -> new NotFoundException("Commodity code not found with code: " + code));
     }
 
-    @Transactional
-    public CommodityCode create(CommodityCode commodityCode) {
-        log.debug("Creating commodity code: {}", commodityCode.getCode());
-        
-        if (commodityCodeRepository.existsByCode(commodityCode.getCode())) {
-            throw new ConflictException("Commodity code already exists with code: " + commodityCode.getCode());
-        }
-        
-        return commodityCodeRepository.save(commodityCode);
-    }
-
-    @Transactional
-    public CommodityCode update(Long id, CommodityCode commodityCode) {
-        log.debug("Updating commodity code with id: {}", id);
-        
-        CommodityCode existing = findById(id);
-        
-        // Check if code is being changed and if new code already exists
-        if (!existing.getCode().equals(commodityCode.getCode()) && 
-            commodityCodeRepository.existsByCode(commodityCode.getCode())) {
-            throw new ConflictException("Commodity code already exists with code: " + commodityCode.getCode());
-        }
-        
-        existing.setCode(commodityCode.getCode());
-        existing.setDescription(commodityCode.getDescription());
-        
-        return commodityCodeRepository.save(existing);
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        log.debug("Deleting commodity code with id: {}", id);
-        
-        if (!commodityCodeRepository.existsById(id)) {
-            throw new NotFoundException("Commodity code not found with id: " + id);
-        }
-        
-        commodityCodeRepository.deleteById(id);
-    }
-
     @Transactional(readOnly = true)
     public List<CommodityCode> searchByDescription(String searchTerm) {
         log.debug("Searching commodity codes by description: {}", searchTerm);

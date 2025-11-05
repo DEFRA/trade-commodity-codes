@@ -34,6 +34,25 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+    networks:
+      - cdp-tenant
+
+  liquibase:
+    image: liquibase/liquibase:4.32.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./changelog:/liquibase/changelog
+    command: >
+      --driver=org.postgresql.Driver
+      --changelog-file=/liquibase/changelog/db.changelog.xml
+      --url=jdbc:postgresql://postgres:5432/trade-commodity-codes
+      --username=postgres
+      --password=postgres
+      update
     networks:
       - cdp-tenant
 
@@ -50,6 +69,12 @@ services:
     depends_on:
       localstack:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
+    volumes:
+      - './changelog:/app/changelog'
     env_file:
       - 'compose/aws.env'
     environment:
@@ -76,6 +101,9 @@ services:
 
       # Spring profile (dev = exposes debugging actuator endpoints)
       SPRING_PROFILES_ACTIVE: dev
+
+      # Liquibase configuration for dev profile
+      LIQUIBASE_CHANGELOG_PATH: changelog/db.changelog.xml
 
       # Java Debug (optional - uncomment to enable remote debugging)
       # JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005

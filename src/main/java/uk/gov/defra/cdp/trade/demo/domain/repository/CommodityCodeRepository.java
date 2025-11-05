@@ -26,11 +26,6 @@ public interface CommodityCodeRepository extends JpaRepository<CommodityCode, Lo
     Optional<CommodityCode> findByCode(String code);
 
     /**
-     * Check if a commodity code exists by its code value.
-     */
-    boolean existsByCode(String code);
-
-    /**
      * Find all commodity codes containing the specified text in description.
      */
     @Query("SELECT c FROM CommodityCode c WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")

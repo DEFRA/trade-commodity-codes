@@ -103,47 +103,47 @@
         </sql>
     </changeSet>
 
-    <!-- Create utility sequences -->
-    <changeSet id="postgresql-additional-05-create-utility-sequences" author="consolidated-migration">
-        <sql dbms="postgresql" endDelimiter="/">
-            <![CDATA[
-            -- Create sequence for generating unique batch IDs for data loading
-            CREATE SEQUENCE seq_data_load_batch_id
-                START WITH 1
-                INCREMENT BY 1
-                NO MAXVALUE
-                NO MINVALUE
-                CACHE 1;
-            
-            -- Create sequence for generating temporary IDs
-            CREATE SEQUENCE seq_temp_id
-                START WITH 1000000
-                INCREMENT BY 1
-                NO MAXVALUE
-                NO MINVALUE
-                CACHE 10;
-            ]]>
-        </sql>
-      </changeSet>
+<!--    &lt;!&ndash; Create utility sequences &ndash;&gt;-->
+<!--    <changeSet id="postgresql-additional-05-create-utility-sequences" author="consolidated-migration">-->
+<!--        <sql dbms="postgresql" endDelimiter="/">-->
+<!--            <![CDATA[-->
+<!--            &#45;&#45; Create sequence for generating unique batch IDs for data loading-->
+<!--            CREATE SEQUENCE seq_data_load_batch_id-->
+<!--                START WITH 1-->
+<!--                INCREMENT BY 1-->
+<!--                NO MAXVALUE-->
+<!--                NO MINVALUE-->
+<!--                CACHE 1;-->
+<!--            -->
+<!--            &#45;&#45; Create sequence for generating temporary IDs-->
+<!--            CREATE SEQUENCE seq_temp_id-->
+<!--                START WITH 1000000-->
+<!--                INCREMENT BY 1-->
+<!--                NO MAXVALUE-->
+<!--                NO MINVALUE-->
+<!--                CACHE 10;-->
+<!--            ]]>-->
+<!--        </sql>-->
+<!--      </changeSet>-->
 
     <!-- Create utility stored procedures for data management -->
     <changeSet id="postgresql-additional-06-create-utility-procedures" author="consolidated-migration">
         <sql dbms="postgresql" endDelimiter="/">
             <![CDATA[
             -- Procedure to cleanup old data load records
-            CREATE OR REPLACE FUNCTION sp_cleanup_old_data_loads(days_to_keep INTEGER DEFAULT 90)
-            RETURNS INTEGER AS $$
-            DECLARE
-                deleted_count INTEGER;
-            BEGIN
-                DELETE FROM data_load 
-                WHERE loaded < CURRENT_TIMESTAMP - INTERVAL '1 day' * days_to_keep;
-                
-                GET DIAGNOSTICS deleted_count = ROW_COUNT;
-                
-                RETURN deleted_count;
-            END;
-            $$ LANGUAGE plpgsql;
+--             CREATE OR REPLACE FUNCTION sp_cleanup_old_data_loads(days_to_keep INTEGER DEFAULT 90)
+--             RETURNS INTEGER AS $$
+--             DECLARE
+--                 deleted_count INTEGER;
+--             BEGIN
+--                 DELETE FROM data_load
+--                 WHERE loaded < CURRENT_TIMESTAMP - INTERVAL '1 day' * days_to_keep;
+--
+--                 GET DIAGNOSTICS deleted_count = ROW_COUNT;
+--
+--                 RETURN deleted_count;
+--             END;
+--             $$ LANGUAGE plpgsql;
             
             -- Procedure to archive deleted commodity attributes
             CREATE OR REPLACE FUNCTION sp_archive_deleted_attributes()
@@ -166,33 +166,33 @@
             END;
             $$ LANGUAGE plpgsql;
             
-            -- Function to get database statistics
-            CREATE OR REPLACE FUNCTION fn_get_database_statistics()
-            RETURNS JSON AS $$
-            DECLARE
-                stats_json JSON;
-            BEGIN
-                SELECT json_build_object(
-                    'tables', json_build_object(
-                        'commodity_nomenclature', (SELECT COUNT(*) FROM commodity_nomenclature),
-                        'certificates', (SELECT COUNT(*) FROM certificates),
-                        'species', (SELECT COUNT(*) FROM species),
-                        'certification_requirement', (SELECT COUNT(*) FROM certification_requirement),
-                        'certification_nomenclature', (SELECT COUNT(*) FROM certification_nomenclature),
-                        'commodity_group', (SELECT COUNT(*) FROM commodity_group WHERE is_deleted = FALSE),
-                        'commodity_group_commodity', (SELECT COUNT(*) FROM commodity_group_commodity WHERE is_deleted = FALSE),
-                        'commoditycode_attributes', (SELECT COUNT(*) FROM commoditycode_attributes WHERE is_deleted = FALSE)
-                    ),
-                    'data_loads', json_build_object(
-                        'total_loads', (SELECT COUNT(*) FROM data_load),
-                        'latest_load', (SELECT MAX(loaded) FROM data_load)
-                    ),
-                    'generated_at', CURRENT_TIMESTAMP
-                ) INTO stats_json;
-                
-                RETURN stats_json;
-            END;
-            $$ LANGUAGE plpgsql;
+--             -- Function to get database statistics
+--             CREATE OR REPLACE FUNCTION fn_get_database_statistics()
+--             RETURNS JSON AS $$
+--             DECLARE
+--                 stats_json JSON;
+--             BEGIN
+--                 SELECT json_build_object(
+--                     'tables', json_build_object(
+--                         'commodity_nomenclature', (SELECT COUNT(*) FROM commodity_nomenclature),
+--                         'certificates', (SELECT COUNT(*) FROM certificates),
+--                         'species', (SELECT COUNT(*) FROM species),
+--                         'certification_requirement', (SELECT COUNT(*) FROM certification_requirement),
+--                         'certification_nomenclature', (SELECT COUNT(*) FROM certification_nomenclature),
+--                         'commodity_group', (SELECT COUNT(*) FROM commodity_group WHERE is_deleted = FALSE),
+--                         'commodity_group_commodity', (SELECT COUNT(*) FROM commodity_group_commodity WHERE is_deleted = FALSE),
+--                         'commoditycode_attributes', (SELECT COUNT(*) FROM commoditycode_attributes WHERE is_deleted = FALSE)
+--                     ),
+--                     'data_loads', json_build_object(
+--                         'total_loads', (SELECT COUNT(*) FROM data_load),
+--                         'latest_load', (SELECT MAX(loaded) FROM data_load)
+--                     ),
+--                     'generated_at', CURRENT_TIMESTAMP
+--                 ) INTO stats_json;
+--
+--                 RETURN stats_json;
+--             END;
+--             $$ LANGUAGE plpgsql;
             ]]>
         </sql>
     </changeSet>
@@ -225,57 +225,57 @@
      </changeSet>
 
     <!-- Create ETL helper functions -->
-    <changeSet id="postgresql-additional-08-create-etl-helper-functions" author="consolidated-migration">
-        <sql dbms="postgresql" endDelimiter="/">
-            <![CDATA[
-            -- Function to log data load operations
-            CREATE OR REPLACE FUNCTION fn_log_data_load(
-                p_table_name VARCHAR(100),
-                p_file_name VARCHAR(265),
-                p_load_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            ) RETURNS BIGINT AS $$
-            DECLARE
-                load_id BIGINT;
-            BEGIN
-                INSERT INTO data_load (loaded, file_name, table_name)
-                VALUES (p_load_timestamp, p_file_name, p_table_name)
-                RETURNING id INTO load_id;
-                
-                RETURN load_id;
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- Function to convert SQL Server data types during ETL
-            CREATE OR REPLACE FUNCTION fn_convert_sql_server_datetime(
-                sql_server_datetime TEXT
-            ) RETURNS TIMESTAMP AS $$
-            BEGIN
-                -- Handle SQL Server datetime format conversion
-                IF sql_server_datetime IS NULL OR sql_server_datetime = '' THEN
-                    RETURN NULL;
-                END IF;
-                
-                -- Convert SQL Server datetime to PostgreSQL timestamp
-                -- This is a simplified conversion - adjust based on your specific format
-                RETURN sql_server_datetime::TIMESTAMP;
-            EXCEPTION
-                WHEN OTHERS THEN
-                    RETURN NULL;
-            END;
-            $$ LANGUAGE plpgsql;
-            
-            -- Function to validate commodity code during ETL
-            CREATE OR REPLACE FUNCTION fn_validate_commodity_code_format(
-                commodity_code VARCHAR(100)
-            ) RETURNS BOOLEAN AS $$
-            BEGIN
-                -- Validate commodity code format (adjust regex as needed)
-                RETURN commodity_code ~ '^[0-9]{1,8}(\.[0-9]{1,2})?$';
-            END;
-            $$ LANGUAGE plpgsql IMMUTABLE;
-            ]]>
-        </sql>
-    </changeSet>
+<!--    <changeSet id="postgresql-additional-08-create-etl-helper-functions" author="consolidated-migration">-->
+<!--        <sql dbms="postgresql" endDelimiter="/">-->
+<!--            <![CDATA[-->
+<!--            &#45;&#45; Function to log data load operations-->
+<!--            CREATE OR REPLACE FUNCTION fn_log_data_load(-->
+<!--                p_table_name VARCHAR(100),-->
+<!--                p_file_name VARCHAR(265),-->
+<!--                p_load_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP-->
+<!--            ) RETURNS BIGINT AS $$-->
+<!--            DECLARE-->
+<!--                load_id BIGINT;-->
+<!--            BEGIN-->
+<!--                INSERT INTO data_load (loaded, file_name, table_name)-->
+<!--                VALUES (p_load_timestamp, p_file_name, p_table_name)-->
+<!--                RETURNING id INTO load_id;-->
+<!--                -->
+<!--                RETURN load_id;-->
+<!--            END;-->
+<!--            $$ LANGUAGE plpgsql;-->
+<!--            -->
+<!--            &#45;&#45; Function to convert SQL Server data types during ETL-->
+<!--            CREATE OR REPLACE FUNCTION fn_convert_sql_server_datetime(-->
+<!--                sql_server_datetime TEXT-->
+<!--            ) RETURNS TIMESTAMP AS $$-->
+<!--            BEGIN-->
+<!--                &#45;&#45; Handle SQL Server datetime format conversion-->
+<!--                IF sql_server_datetime IS NULL OR sql_server_datetime = '' THEN-->
+<!--                    RETURN NULL;-->
+<!--                END IF;-->
+<!--                -->
+<!--                &#45;&#45; Convert SQL Server datetime to PostgreSQL timestamp-->
+<!--                &#45;&#45; This is a simplified conversion - adjust based on your specific format-->
+<!--                RETURN sql_server_datetime::TIMESTAMP;-->
+<!--            EXCEPTION-->
+<!--                WHEN OTHERS THEN-->
+<!--                    RETURN NULL;-->
+<!--            END;-->
+<!--            $$ LANGUAGE plpgsql;-->
+<!--            -->
+<!--            &#45;&#45; Function to validate commodity code during ETL-->
+<!--            CREATE OR REPLACE FUNCTION fn_validate_commodity_code_format(-->
+<!--                commodity_code VARCHAR(100)-->
+<!--            ) RETURNS BOOLEAN AS $$-->
+<!--            BEGIN-->
+<!--                &#45;&#45; Validate commodity code format (adjust regex as needed)-->
+<!--                RETURN commodity_code ~ '^[0-9]{1,8}(\.[0-9]{1,2})?$';-->
+<!--            END;-->
+<!--            $$ LANGUAGE plpgsql IMMUTABLE;-->
+<!--            ]]>-->
+<!--        </sql>-->
+<!--    </changeSet>-->
 
     <!-- Add table and object comments for documentation -->
     <changeSet id="postgresql-additional-09-add-comprehensive-comments" author="consolidated-migration" dbms="postgresql">
@@ -295,11 +295,11 @@
             COMMENT ON TABLE article_72_commodities IS 'Article 72 specific commodities for regulatory compliance';
             COMMENT ON TABLE commodity_configuration IS 'Commodity configuration settings including test and trial requirements';
             COMMENT ON TABLE commoditycode_attributes IS 'Extended attributes for commodity codes with effective date management';
-            COMMENT ON TABLE data_load IS 'Data loading audit trail for ETL operations';
+--             COMMENT ON TABLE data_load IS 'D/**/ata loading audit trail for ETL operations';
             
             -- Sequence comments
-            COMMENT ON SEQUENCE seq_data_load_batch_id IS 'Generates unique batch IDs for data loading operations';
-            COMMENT ON SEQUENCE seq_temp_id IS 'Generates temporary IDs for data processing';
+--             COMMENT ON SEQUENCE seq_data_load_batch_id IS 'Generates unique batch IDs for data loading operations';
+--             COMMENT ON SEQUENCE seq_temp_id IS 'Generates temporary IDs for data processing';
             
             -- Type comments
             COMMENT ON TYPE certificate_type_enum IS 'Enumeration of valid certificate types';
@@ -308,7 +308,7 @@
             
             -- Function comments
             COMMENT ON FUNCTION audit_trigger_function() IS 'Trigger function for automatic timestamp updates and audit logging';
-            COMMENT ON FUNCTION sp_cleanup_old_data_loads(INTEGER) IS 'Procedure to cleanup old data load records based on retention period';
+--             COMMENT ON FUNCTION sp_cleanup_old_data_loads(INTEGER) IS 'Procedure to cleanup old data load records based on retention period';
             COMMENT ON FUNCTION sp_archive_deleted_attributes() IS 'Procedure to archive deleted commodity attributes';
             COMMENT ON FUNCTION fn_get_database_statistics() IS 'Returns comprehensive database statistics as JSON';
             COMMENT ON FUNCTION fn_log_data_load(VARCHAR, VARCHAR, TIMESTAMP) IS 'Logs data load operations for audit trail';

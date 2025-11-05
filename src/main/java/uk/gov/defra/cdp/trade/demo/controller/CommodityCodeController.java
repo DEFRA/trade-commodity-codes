@@ -69,49 +69,6 @@ public class CommodityCodeController {
         return ResponseEntity.ok(commodityCode);
     }
 
-    @PostMapping
-    @Operation(summary = "Create commodity code", description = "Create a new commodity code")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Successfully created commodity code"),
-        @ApiResponse(responseCode = "400", description = "Invalid input"),
-        @ApiResponse(responseCode = "409", description = "Commodity code already exists")
-    })
-    public ResponseEntity<CommodityCode> createCommodityCode(
-            @Parameter(description = "Commodity code to create") @Valid @RequestBody CommodityCode commodityCode) {
-        log.info("POST /commodity-codes - Creating commodity code: {}", commodityCode.getCode());
-        CommodityCode created = commodityCodeService.create(commodityCode);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update commodity code", description = "Update an existing commodity code")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Successfully updated commodity code"),
-        @ApiResponse(responseCode = "400", description = "Invalid input"),
-        @ApiResponse(responseCode = "404", description = "Commodity code not found"),
-        @ApiResponse(responseCode = "409", description = "Commodity code with new code already exists")
-    })
-    public ResponseEntity<CommodityCode> updateCommodityCode(
-            @Parameter(description = "Commodity code ID") @PathVariable Long id,
-            @Parameter(description = "Updated commodity code") @Valid @RequestBody CommodityCode commodityCode) {
-        log.info("PUT /commodity-codes/{} - Updating commodity code", id);
-        CommodityCode updated = commodityCodeService.update(id, commodityCode);
-        return ResponseEntity.ok(updated);
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete commodity code", description = "Delete a commodity code by ID")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Successfully deleted commodity code"),
-        @ApiResponse(responseCode = "404", description = "Commodity code not found")
-    })
-    public ResponseEntity<Void> deleteCommodityCode(
-            @Parameter(description = "Commodity code ID") @PathVariable Long id) {
-        log.info("DELETE /commodity-codes/{} - Deleting commodity code", id);
-        commodityCodeService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/search")
     @Operation(summary = "Search commodity codes", description = "Search commodity codes by description")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved matching commodity codes")

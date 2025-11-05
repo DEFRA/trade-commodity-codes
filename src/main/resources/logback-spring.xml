@@ -29,7 +29,6 @@
     <logger name="org.springframework.web" level="INFO"/>
 
     <!-- MongoDB driver logging -->
-    <logger name="org.mongodb.driver" level="WARN"/>
     <logger name="org.hibernate.resource.transaction" level="WARN"/>
     <logger name="com.zaxxer.hikari" level="WARN"/>
     <logger name="org.apache.coyote" level="ERROR"/>

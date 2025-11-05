@@ -185,20 +185,20 @@
         </createView>
     </changeSet>
 
-    <!-- Data load status view -->
-    <changeSet id="postgresql-views-07-create-data-load-status-view" author="consolidated-migration">
-        <createView viewName="v_data_load_status">
-            <![CDATA[
-            SELECT 
-                table_name,
-                file_name,
-                loaded,
-                CURRENT_TIMESTAMP - loaded AS age
-            FROM data_load
-            ORDER BY loaded DESC
-            ]]>
-        </createView>
-    </changeSet>
+<!--    &lt;!&ndash; Data load status view &ndash;&gt;-->
+<!--    <changeSet id="postgresql-views-07-create-data-load-status-view" author="consolidated-migration">-->
+<!--        <createView viewName="v_data_load_status">-->
+<!--            <![CDATA[-->
+<!--            SELECT -->
+<!--                table_name,-->
+<!--                file_name,-->
+<!--                loaded,-->
+<!--                CURRENT_TIMESTAMP - loaded AS age-->
+<!--            FROM data_load-->
+<!--            ORDER BY loaded DESC-->
+<!--            ]]>-->
+<!--        </createView>-->
+<!--    </changeSet>-->
 
     <!-- Active commodity configurations view -->
     <changeSet id="postgresql-views-08-create-active-commodity-configurations-view" author="consolidated-migration">
@@ -246,7 +246,7 @@
             COMMENT ON VIEW v_chedpp_species IS 'CHED-PP specific species information';
             COMMENT ON VIEW v_chedp_species IS 'CHED-P specific species information with extended classification';
             COMMENT ON VIEW v_commodity_code_species IS 'Enhanced commodity view including species data';
-            COMMENT ON VIEW v_data_load_status IS 'Data loading audit and monitoring view';
+--             COMMENT ON VIEW v_data_load_status IS 'Data loading audit and monitoring view';
             COMMENT ON VIEW v_active_commodity_configurations IS 'Currently active commodity configurations';
             COMMENT ON VIEW v_active_commodity_attributes IS 'Currently active commodity attributes';
         </sql>

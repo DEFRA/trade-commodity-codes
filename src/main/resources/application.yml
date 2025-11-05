@@ -14,6 +14,8 @@ spring:
       minimum-idle: 2
       maximum-pool-size: 10
       connection-test-query: SELECT 1
+  liquibase:
+    enabled: false
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:none}
@@ -22,11 +24,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-  liquibase:
-    change-log: classpath:db/changelog/master-changelog.xml
-    enabled: ${LIQUIBASE_ENABLED:true}
-    drop-first: ${LIQUIBASE_DROP_FIRST:false}
-    contexts: ${LIQUIBASE_CONTEXTS:default}
+
 
   lifecycle:
     timeout-per-shutdown-phase: 30s

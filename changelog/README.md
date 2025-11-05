@@ -41,10 +41,10 @@ The changelogs must be executed in this specific order (handled automatically by
 createdb commodity_db
 
 # Run complete migration
-liquibase --changeLogFile=master-changelog.xml update
+liquibase --changeLogFile=db.changelog.xml update
 
 # Verify migration
-liquibase --changeLogFile=master-changelog.xml status
+liquibase --changeLogFile=db.changelog.xml status
 ```
 
 ### User Setup (IMPORTANT)
