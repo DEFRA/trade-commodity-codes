@@ -21,6 +21,8 @@ spring:
   datasource:
     username: postgres
     password: postgres
+    ssl:
+      enabled: false
   liquibase:
     enabled: false
 
