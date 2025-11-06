@@ -1,0 +1,27 @@
+# Development profile - exposes additional actuator endpoints for debugging
+# (defaults are in application.yml)
+
+logging:
+  level:
+    root: DEBUG
+    uk.gov.defra.cdp.trade.demo: DEBUG
+    org.springframework: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK:INFO}
+    org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: when-authorized
+spring:
+  datasource:
+    username: postgres
+    password: postgres
+    ssl:
+      enabled: false
+  liquibase:
+    enabled: false
+
