@@ -18,6 +18,9 @@ management:
     health:
       show-details: when-authorized
 spring:
+  datasource:
+    username: postgres
+    password: postgres
   liquibase:
     enabled: false
 

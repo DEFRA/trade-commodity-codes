@@ -7,10 +7,7 @@ spring:
     name: trade-commodity-codes
   # Replica datasource
   datasource:
-    primary:
-      url: ${POSTGRES_URI:jdbc:postgresql://postgres:5432/trade-commodity-codes}
-      maximum-pool-size: 10
-      minimum-idle: 2
+    url: ${POSTGRES_PRIMARY_URI:jdbc:postgresql://postgres:5432/trade-commodity-codes}
     hikari:
       maximum-pool-size: 10
       max-lifetime: 600000

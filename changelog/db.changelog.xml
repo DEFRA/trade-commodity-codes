@@ -55,7 +55,4 @@
     <!-- 4. Additional Objects (triggers, types, sequences, etc.) -->
     <include file="changes/04-additional-objects-changelog.xml" relativeToChangelogFile="true"/>
     
-    <!-- 5. Permissions (must be last to grant access to all objects) -->
-    <include file="changes/05-permissions-changelog.xml" relativeToChangelogFile="true"/>
-
 </databaseChangeLog>
