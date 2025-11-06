@@ -7,8 +7,6 @@ spring:
     name: trade-commodity-codes
   lifecycle:
     timeout-per-shutdown-phase: 30s
-  liquibase:
-    enabled: false
   datasource:
     username: postgres
     password: postgres
@@ -47,7 +45,6 @@ logging:
 
 # Actuator endpoints
 # Production: Only health endpoint exposed (secure by default)
-# Development: Use dev profile (application-dev.yml) for debugging endpoints
 management:
   endpoints:
     web:

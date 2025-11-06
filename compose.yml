@@ -100,7 +100,7 @@ services:
       ENABLE_METRICS: true
 
       # Spring profile (dev = exposes debugging actuator endpoints)
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: local
 
       # Liquibase configuration for dev profile
       LIQUIBASE_CHANGELOG_PATH: changelog/db.changelog.xml

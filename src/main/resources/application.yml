@@ -16,8 +16,6 @@ spring:
       max-lifetime: ${POSTGRES_MAX_LIFETIME:600000}
       connection-timeout: ${POSTGRES_CONNECTION_TIMEOUT:30000}
       connection-test-query: SELECT 1
-  liquibase:
-    enabled: false
 
   jpa:
     hibernate:
@@ -77,7 +75,7 @@ logging:
 
 # Actuator endpoints
 # Production: Only health endpoint exposed (secure by default)
-# Development: Use dev profile (application-dev.yml) for debugging endpoints
+# Development: Use dev profile (application-local.yml) for debugging endpoints
 management:
   endpoints:
     web:

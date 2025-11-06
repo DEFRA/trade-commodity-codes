@@ -22,6 +22,4 @@ spring:
     password: postgres
     ssl:
       enabled: false
-  liquibase:
-    enabled: false
 
