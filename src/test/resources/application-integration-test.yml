@@ -5,22 +5,13 @@ server:
 spring:
   application:
     name: trade-commodity-codes
-  data:
-    mongodb:
-      uri: ${MONGO_URI:mongodb://localhost:27017}
-      database: ${MONGO_DATABASE:trade-commodity-codes}
-      auto-index-creation: true
-      read-preference: ${MONGO_READ_PREFERENCE:secondary}
-      write-concern: ${MONGO_WRITE_CONCERN:majority}
-      connection-pool:
-        min-size: ${MONGO_POOL_MIN_SIZE:10}
-        max-size: ${MONGO_POOL_MAX_SIZE:100}
-        max-wait-time-ms: ${MONGO_POOL_MAX_WAIT_TIME_MS:2000}
-        max-connection-idle-time-ms: ${MONGO_POOL_MAX_IDLE_TIME_MS:60000}
-      ssl:
-        enabled: false
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  datasource:
+    username: postgres
+    password: postgres
+    ssl:
+      enabled: false
 
 # CDP platform configuration
 cdp:
@@ -54,7 +45,6 @@ logging:
 
 # Actuator endpoints
 # Production: Only health endpoint exposed (secure by default)
-# Development: Use dev profile (application-dev.yml) for debugging endpoints
 management:
   endpoints:
     web:

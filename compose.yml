@@ -22,18 +22,39 @@ services:
     networks:
       - cdp-tenant
 
-  mongodb:
-    image: mongo:7.0
+  postgres:
+    image: postgres:16
+    container_name: trade-commodity-codes-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: trade-commodity-codes
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
     networks:
       - cdp-tenant
+
+  liquibase:
+    image: liquibase/liquibase:4.32.0
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      - mongodb-data:/data/db
-    restart: always
-    healthcheck:
-      test: ['CMD', 'mongosh', '--eval', 'db.adminCommand("ping")']
-      interval: 5s
-      start_period: 10s
-      retries: 3
+      - ./changelog:/liquibase/changelog
+    command: >
+      --driver=org.postgresql.Driver
+      --changelog-file=changelog/db.changelog.xml
+      --url=jdbc:postgresql://postgres:5432/trade-commodity-codes
+      --username=postgres
+      --password=postgres
+      update
+    networks:
+      - cdp-tenant
 
   trade-commodity-codes:
     build:
@@ -44,12 +65,16 @@ services:
       - '5005:5005' # Java debug port
     links:
       - 'localstack:localstack'
-      - 'mongodb:mongodb'
+      - 'postgres:postgres'
     depends_on:
       localstack:
         condition: service_healthy
-      mongodb:
+      postgres:
         condition: service_healthy
+      liquibase:
+        condition: service_completed_successfully
+    volumes:
+      - './changelog:/app/changelog'
     env_file:
       - 'compose/aws.env'
     environment:
@@ -60,9 +85,9 @@ services:
       SERVICE_VERSION: 0.0.0-local
       ENVIRONMENT: local
 
-      # MongoDB
-      MONGO_URI: mongodb://mongodb:27017
-      MONGO_DATABASE: trade-commodity-codes
+      # Postgres
+      POSTGRES_URI: jdbc:postgresql://postgres:5432/trade-commodity-codes
+      POSTGRES_DATABASE: trade-commodity-codes
 
       # AWS (via LocalStack)
       LOCALSTACK_ENDPOINT: http://localstack:4566
@@ -75,7 +100,10 @@ services:
       ENABLE_METRICS: true
 
       # Spring profile (dev = exposes debugging actuator endpoints)
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: local
+
+      # Liquibase configuration for dev profile
+      LIQUIBASE_CHANGELOG_PATH: changelog/db.changelog.xml
 
       # Java Debug (optional - uncomment to enable remote debugging)
       # JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
@@ -88,7 +116,7 @@ services:
 
 volumes:
   localstack-data:
-  mongodb-data:
+  postgres-data:
 
 networks:
   cdp-tenant:

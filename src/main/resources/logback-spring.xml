@@ -29,6 +29,14 @@
     <logger name="org.springframework.web" level="INFO"/>
 
     <!-- MongoDB driver logging -->
-    <logger name="org.mongodb.driver" level="WARN"/>
+    <logger name="org.hibernate.resource.transaction" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
     <logger name="org.apache.coyote" level="ERROR"/>
+    <logger name="org.apache.tomcat" level="WARN"/>
+    <logger name="org.apache.catalina" level="INFO"/>
+    <logger name="liquibase" level="INFO"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="io.netty" level="INFO"/>
+    <logger name="org.postgresql" level="INFO"/>
+    <logger name="jdk.event.security" level="INFO"/>
 </configuration>
