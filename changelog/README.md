@@ -1,21 +1,21 @@
-# PostgreSQL Liquibase Migration Changelogs
+# PostgreSQL Liquibase Database Changelogs
 
-This directory contains consolidated Liquibase XML changelog files for migrating the commodity code database from SQL Server to PostgreSQL. These changelogs are designed specifically for ETL processes and provide a complete PostgreSQL-optimized database schema.
+This directory contains Liquibase XML changelog files for managing the commodity code database schema in PostgreSQL. These changelogs provide a complete database schema for the Trade Commodity Codes application.
 
 ## Files Overview
 
 ### Core Changelog Files
 
-1. **`master-changelog.xml`** - Main entry point that includes all other changelogs in the correct order
+1. **`db.changelog.xml`** - Main entry point that includes all other changelogs in the correct order
 2. **`01-tables-changelog.xml`** - All table structures, constraints, and indexes
 3. **`02-functions-changelog.xml`** - All stored functions and procedures
 4. **`03-views-changelog.xml`** - All database views for data access
-5. **`04-additional-objects-changelog.xml`** - Triggers, types, sequences, and ETL utilities
+5. **`04-additional-objects-changelog.xml`** - Triggers, types, sequences, and additional objects
 6. **`05-permissions-changelog.xml`** - Complete role-based security model
 
 ### Execution Order
 
-The changelogs must be executed in this specific order (handled automatically by `master-changelog.xml`):
+The changelogs must be executed in this specific order (handled automatically by `db.changelog.xml`):
 
 ```
 1. Tables & Constraints    (01-tables-changelog.xml)
@@ -64,7 +64,7 @@ CREATE USER "your-managed-identity-name" FROM EXTERNAL PROVIDER;
 -- Option 3: LDAP/AD (configure according to your setup)
 ```
 
-Then uncomment and modify the role assignment statements in `04-permissions-changelog.xml`.
+Then uncomment and modify the role assignment statements in `05-permissions-changelog.xml`.
 
 ## Database Schema Overview
 
@@ -137,63 +137,65 @@ Then uncomment and modify the role assignment statements in `04-permissions-chan
 - **Constraints**: Check constraints for data validation
 - **Sequences**: Dedicated sequences for batch processing
 
-## ETL Integration Features
+## Development Environment
 
-### Data Loading Support
+### Docker Compose Setup
+
+The changelogs are automatically executed in the development environment via Docker Compose:
+
+```yaml
+# In compose.yml
+liquibase:
+  image: liquibase/liquibase:4.32.0
+  depends_on:
+    postgres:
+      condition: service_healthy
+  volumes:
+    - ./changelog:/liquibase/changelog
+  command: >
+    --driver=org.postgresql.Driver
+    --changelog-file=changelog/db.changelog.xml
+    --url=jdbc:postgresql://postgres:5432/trade-commodity-codes
+    --username=postgres
+    --password=postgres
+    update
+```
+
+### Local Development
+
+```bash
+# Start complete development stack
+make start
+
+# This will:
+# 1. Start PostgreSQL
+# 2. Run Liquibase migrations
+# 3. Start the Spring Boot application
+```
+
+## Database Management
+
+### Schema Updates
+
+When making schema changes:
+
+1. Create new changelog files in the `changes/` directory
+2. Add references to `db.changelog.xml`
+3. Test with `make start` to verify migrations
+4. Commit changes to version control
+
+### Data Loading and Maintenance
 
 ```sql
--- Log data load operations
+-- Log data operations (if available)
 SELECT fn_log_data_load('table_name', 'source_file.csv');
 
--- Validate data during ETL
+-- Validate commodity codes (if available)
 SELECT fn_validate_commodity_code_format('12345678');
 
--- Convert SQL Server datetime formats
-SELECT fn_convert_sql_server_datetime('2024-01-01 12:00:00.000');
-```
-
-### Monitoring and Maintenance
-
-```sql
--- Get database statistics
-SELECT fn_get_database_statistics();
-
--- Cleanup old load records
-SELECT sp_cleanup_old_data_loads(90); -- Keep 90 days
-
--- Archive deleted attributes  
-SELECT sp_archive_deleted_attributes();
-
--- Refresh materialized views
+-- Refresh materialized views (if available)
 REFRESH MATERIALIZED VIEW mv_commodity_code_stats;
 ```
-
-## Migration Best Practices
-
-### Pre-Migration Checklist
-
-- [ ] PostgreSQL server configured and running
-- [ ] Database users created with appropriate authentication
-- [ ] Network connectivity tested
-- [ ] Backup strategy in place
-- [ ] Rollback plan prepared
-
-### During Migration
-
-- [ ] Run validation queries after each stage
-- [ ] Monitor for constraint violations
-- [ ] Check foreign key relationships
-- [ ] Verify index creation
-- [ ] Test view functionality
-
-### Post-Migration Checklist
-
-- [ ] Refresh materialized views
-- [ ] Run comprehensive data validation
-- [ ] Test application connectivity with all roles
-- [ ] Verify ETL process functionality
-- [ ] Update connection strings in applications
-- [ ] Monitor performance and optimize as needed
 
 ## Troubleshooting
 
@@ -292,11 +294,10 @@ ORDER BY seq_scan DESC;
 
 ## Version Information
 
-- **Generated From**: SQL Server Liquibase scripts in `/configuration/database/src/main/resources/`
 - **Target Database**: PostgreSQL 12+
-- **Liquibase Version**: 4.0+
-- **Generated Date**: November 2024
-- **Purpose**: ETL migration from SQL Server to PostgreSQL
+- **Liquibase Version**: 4.32.0+
+- **Updated**: November 2024
+- **Purpose**: Database schema management for Trade Commodity Codes application
 
 ## Support
 

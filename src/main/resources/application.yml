@@ -5,17 +5,18 @@ server:
 spring:
   application:
     name: trade-commodity-codes
+  # Replica datasource
   datasource:
-    url: ${POSTGRES_URI:jdbc:postgresql://postgres:5432/trade-commodity-codes}
-    username: ${POSTGRES_USERNAME:postgres}
-    password: ${POSTGRES_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      minimum-idle: 2
+    primary:
+      url: ${POSTGRES_URI:jdbc:postgresql://postgres:5432/trade-commodity-codes}
       maximum-pool-size: 10
-      connection-test-query: SELECT 1
+      minimum-idle: 2
+    hikari:
+      maximum-pool-size: 10
+      max-lifetime: 600000
   liquibase:
     enabled: false
+
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:none}

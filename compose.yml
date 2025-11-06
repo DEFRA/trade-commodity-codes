@@ -48,7 +48,7 @@ services:
       - ./changelog:/liquibase/changelog
     command: >
       --driver=org.postgresql.Driver
-      --changelog-file=/liquibase/changelog/db.changelog.xml
+      --changelog-file=changelog/db.changelog.xml
       --url=jdbc:postgresql://postgres:5432/trade-commodity-codes
       --username=postgres
       --password=postgres

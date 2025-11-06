@@ -251,24 +251,6 @@
         </createTable>
     </changeSet>
 
-<!--    &lt;!&ndash; Data Loading and Management Tables &ndash;&gt;-->
-<!--    <changeSet id="postgresql-15-create-data-load-table" author="consolidated-migration">-->
-<!--        <createTable tableName="data_load">-->
-<!--            <column name="id" type="BIGSERIAL" autoIncrement="true">-->
-<!--                <constraints primaryKey="true" nullable="false"/>-->
-<!--            </column>-->
-<!--            <column name="loaded" type="TIMESTAMP">-->
-<!--                <constraints nullable="false"/>-->
-<!--            </column>-->
-<!--            <column name="file_name" type="VARCHAR(265)">-->
-<!--                <constraints nullable="false"/>-->
-<!--            </column>-->
-<!--            <column name="table_name" type="VARCHAR(100)">-->
-<!--                <constraints nullable="false" unique="true"/>-->
-<!--            </column>-->
-<!--        </createTable>-->
-<!--    </changeSet>-->
-
     <!-- Foreign Key Constraints -->
     <changeSet id="postgresql-16-add-foreign-key-constraints" author="consolidated-migration">
         <addForeignKeyConstraint 
@@ -298,14 +280,7 @@
             constraintName="fk_cert_nom_species"
             referencedTableName="species"
             referencedColumnNames="code"/>
-        
-<!--        <addForeignKeyConstraint-->
-<!--            baseTableName="commodity_group_commodity"-->
-<!--            baseColumnNames="commodity_group_code"-->
-<!--            constraintName="fk_cgc_commodity_group"-->
-<!--            referencedTableName="commodity_group"-->
-<!--            referencedColumnNames="code"/>-->
-        
+
     </changeSet>
 
     <!-- Indexes for Performance -->
