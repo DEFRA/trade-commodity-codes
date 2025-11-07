@@ -9,6 +9,8 @@
     <!-- PostgreSQL Consolidated Functions Changelog -->
     <!-- ============================================================================ -->
 
+
+
     <!-- Function to generate commodity category data as JSON -->
     <changeSet id="postgresql-functions-01-create-commodity-category-data-function" author="consolidated-migration">
         <sql dbms="postgresql" endDelimiter="/">
@@ -376,6 +378,19 @@
             ]]>
         </sql>
     </changeSet>
+
+  <changeSet id="postgresql-functions-05a-create-functions-permission" author="consolidated-migration">
+    <preConditions onFail="CONTINUE">
+      <changeLogPropertyDefined property="ENVIRONMENT"/>
+    </preConditions>
+    <sql dbms="postgresql" endDelimiter="/">
+        <![CDATA[
+      -- Ensure roles get permissions on future functions
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO trade_commodity_codes;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO trade_commodity_codes_ddl;
+      ]]>
+      </sql>
+  </changeSet>
 
     <!-- Add function comments for documentation -->
     <changeSet id="postgresql-functions-06-add-function-comments" author="consolidated-migration" dbms="postgresql">
