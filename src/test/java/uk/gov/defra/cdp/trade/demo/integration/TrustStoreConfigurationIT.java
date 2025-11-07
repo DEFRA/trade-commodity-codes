@@ -69,8 +69,8 @@ fA==
     @Test
     void certificateLoader_shouldReturnNullWhenNoCertificate() {
         // When: Loading certificates
-        CertificateLoader loader = new CertificateLoader(null);
-        X509Certificate cert = loader.loadCustomCertificate();
+        CertificateLoader loader = new CertificateLoader(null, null);
+        X509Certificate cert = loader.loadCdpCertificate();
 
         // Then: Should return null
         assertThat(cert)
@@ -82,14 +82,33 @@ fA==
     void certificateLoader_shouldLoadValidCertificateWhenProvided() {
         // Given: Mock scanner that returns valid certificate data
         byte[] encoded = Base64.getEncoder().encode(VALID_CERT_PEM.getBytes());
-        CertificateLoader loader = new CertificateLoader(new String(encoded));
+        CertificateLoader loader = new CertificateLoader(new String(encoded), null);
 
         // When: Loading certificates
-        X509Certificate cert = loader.loadCustomCertificate();
+        X509Certificate cert = loader.loadCdpCertificate();
 
         // Then: Certificate should be successfully loaded
         assertThat(cert)
             .as("Should load 1 certificate")
+            .isNotNull();
+
+        assertThat(cert.getSubjectX500Principal().getName())
+            .as("Certificate subject should contain GB")
+            .contains("GB");
+    }
+
+    @Test
+    void certificateLoader_shouldLoadValidRdsCertificateWhenProvided() {
+        // Given: Mock scanner that returns valid RDS certificate data
+        byte[] encoded = Base64.getEncoder().encode(VALID_CERT_PEM.getBytes());
+        CertificateLoader loader = new CertificateLoader(null, new String(encoded));
+
+        // When: Loading RDS certificate
+        X509Certificate cert = loader.loadRdsCertificate();
+
+        // Then: Certificate should be successfully loaded
+        assertThat(cert)
+            .as("Should load RDS certificate")
             .isNotNull();
 
         assertThat(cert.getSubjectX500Principal().getName())

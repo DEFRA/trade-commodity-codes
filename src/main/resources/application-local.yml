@@ -23,3 +23,8 @@ spring:
     password: postgres
     ssl:
       enabled: false
+
+aws:
+  rds:
+    iam:
+      enabled: false

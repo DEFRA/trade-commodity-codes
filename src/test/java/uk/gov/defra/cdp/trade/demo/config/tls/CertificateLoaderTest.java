@@ -3,7 +3,6 @@ package uk.gov.defra.cdp.trade.demo.config.tls;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Base64;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class CertificateLoaderTest {
@@ -40,29 +39,62 @@ fA==
     
     @Test
     void testHandlesNullCertificate() {
-        certificateLoader = new CertificateLoader(null);
-        assertNull(certificateLoader.loadCustomCertificate(), "Expected a null certificate");
+        certificateLoader = new CertificateLoader(null, null);
+        assertNull(certificateLoader.loadCdpCertificate(), "Expected a null certificate");
     }
-    
+
     @Test
     void testHandlesEmptyCertificate() {
-        certificateLoader = new CertificateLoader("");
-        assertNull(certificateLoader.loadCustomCertificate(), "Expected a null certificate");
+        certificateLoader = new CertificateLoader("", "");
+        assertNull(certificateLoader.loadCdpCertificate(), "Expected a null certificate");
 
     }
-    
+
     @Test
     void testHandlesValidCertificate() {
         byte[] encoded = Base64.getEncoder().encode(VALID_CERT_PEM.getBytes());
-        certificateLoader = new CertificateLoader(new String(encoded));
-        assertNotNull(certificateLoader.loadCustomCertificate());
+        certificateLoader = new CertificateLoader(new String(encoded), null);
+        assertNotNull(certificateLoader.loadCdpCertificate());
     }
-    
+
     @Test
     void testHandlesInvalidCertificate() {
-        certificateLoader = new CertificateLoader("invalid");
-        certificateLoader.loadCustomCertificate();
-        assertNull(certificateLoader.loadCustomCertificate(), "Expected a null certificate");
-        
+        certificateLoader = new CertificateLoader("invalid", null);
+        certificateLoader.loadCdpCertificate();
+        assertNull(certificateLoader.loadCdpCertificate(), "Expected a null certificate");
+
+    }
+
+    @Test
+    void testHandlesNullRdsCertificate() {
+        certificateLoader = new CertificateLoader(null, null);
+        assertNull(certificateLoader.loadRdsCertificate(), "Expected a null RDS certificate");
+    }
+
+    @Test
+    void testHandlesEmptyRdsCertificate() {
+        certificateLoader = new CertificateLoader(null, "");
+        assertNull(certificateLoader.loadRdsCertificate(), "Expected a null RDS certificate");
+    }
+
+    @Test
+    void testHandlesValidRdsCertificate() {
+        byte[] encoded = Base64.getEncoder().encode(VALID_CERT_PEM.getBytes());
+        certificateLoader = new CertificateLoader(null, new String(encoded));
+        assertNotNull(certificateLoader.loadRdsCertificate());
+    }
+
+    @Test
+    void testHandlesInvalidRdsCertificate() {
+        certificateLoader = new CertificateLoader(null, "invalid");
+        assertNull(certificateLoader.loadRdsCertificate(), "Expected a null RDS certificate");
+    }
+
+    @Test
+    void testHandlesBothCertificates() {
+        byte[] encoded = Base64.getEncoder().encode(VALID_CERT_PEM.getBytes());
+        certificateLoader = new CertificateLoader(new String(encoded), new String(encoded));
+        assertNotNull(certificateLoader.loadCdpCertificate(), "Expected valid CDP certificate");
+        assertNotNull(certificateLoader.loadRdsCertificate(), "Expected valid RDS certificate");
     }
 }

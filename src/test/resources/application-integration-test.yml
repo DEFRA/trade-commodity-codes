@@ -24,6 +24,9 @@ cdp:
 
 # AWS configuration
 aws:
+  rds:
+    iam:
+      enabled: false
   region: ${AWS_REGION:eu-west-2}
   emf:
     enabled: ${AWS_EMF_ENABLED:false}

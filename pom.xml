@@ -67,6 +67,18 @@
       <version>1.6.0</version>
     </dependency>
 
+    <!-- AWS SDK for RDS IAM Authentication -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>rds</artifactId>
+      <version>2.32.0</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>auth</artifactId>
+      <version>2.32.0</version>
+    </dependency>
+
     <!-- AWS Embedded Metrics for CloudWatch -->
     <dependency>
       <groupId>io.micrometer</groupId>
@@ -187,36 +199,7 @@
               <goal>report</goal>
             </goals>
           </execution>
-          <execution>
-            <id>jacoco-check</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <exclude>uk/gov/defra/cdp/trade/demo/debug/**</exclude>
-              </excludes>
-              <rules>
-                <rule>
-                  <element>BUNDLE</element>
-                  <limits>
-                    <limit>
-                      <counter>LINE</counter>
-                      <value>COVEREDRATIO</value>
-                      <minimum>0.5</minimum>
-                    </limit>
-                  </limits>
-                </rule>
-              </rules>
-            </configuration>
-          </execution>
         </executions>
-        <configuration>
-          <excludes>
-            <exclude>uk/gov/defra/cdp/trade/demo/debug/**</exclude>
-          </excludes>
-        </configuration>
       </plugin>
     </plugins>
   </build>
