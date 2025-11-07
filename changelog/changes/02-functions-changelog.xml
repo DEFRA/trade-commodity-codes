@@ -392,15 +392,4 @@
       </sql>
   </changeSet>
 
-    <!-- Add function comments for documentation -->
-    <changeSet id="postgresql-functions-06-add-function-comments" author="consolidated-migration" dbms="postgresql">
-        <sql>
-            COMMENT ON FUNCTION fn_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS 'Generates JSON data structure for commodity categories with species and classification information';
-            COMMENT ON FUNCTION RIGHT(TEXT, INTEGER) IS 'PostgreSQL implementation of SQL Server RIGHT string function';
-            COMMENT ON FUNCTION fn_enhanced_commodity_category_data(VARCHAR, VARCHAR, VARCHAR) IS 'Enhanced version of commodity category data function with additional business logic and metadata';
-            COMMENT ON FUNCTION fn_get_commodity_hierarchy(VARCHAR) IS 'Returns the complete hierarchy path for a given commodity code';
-            COMMENT ON FUNCTION fn_validate_commodity_configuration(VARCHAR, VARCHAR) IS 'Validates commodity configuration and returns validation results with errors and warnings';
-        </sql>
-    </changeSet>
-
 </databaseChangeLog>
