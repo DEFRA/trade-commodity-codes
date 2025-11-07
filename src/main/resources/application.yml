@@ -7,6 +7,10 @@ spring:
     name: trade-commodity-codes
   datasource:
     url: jdbc:postgresql://${POSTGRES_WRITE_HOSTNAME:postgres}:5432/trade-commodity-codes
+    hostname: ${POSTGRES_WRITE_HOSTNAME:postgres}
+    port: 5432
+    username: trade_commodity_codes
+    database: trade_commodity_codes
     driver-class-name: org.postgresql.Driver
     ssl:
       enabled: true
@@ -53,6 +57,10 @@ cdp:
 
 # AWS configuration
 aws:
+  rds:
+    certificate: ${TRUSTSTORE_RDS_ROOT_CA:}
+    iam:
+      enabled: true
   region: ${AWS_REGION:eu-west-2}
   emf:
     enabled: ${AWS_EMF_ENABLED:true}

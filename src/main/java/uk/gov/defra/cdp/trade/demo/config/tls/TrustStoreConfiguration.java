@@ -1,8 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.config.tls;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -17,7 +15,6 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Configures SSL/TLS for the CDP Java Backend Template.
@@ -47,25 +44,28 @@ public class TrustStoreConfiguration {
      * Creates a custom SSLContext that includes:
      * 1. Default JVM trust store certificates
      * 2. Custom CDP TRUSTSTORE_* certificates
+     * 3. AWS RDS certificates (when configured)
      *
-     * This SSLContext can be used by MongoDB client, RestTemplate, WebClient, etc.
+     * This SSLContext can be used by PostgreSQL, RestTemplate, WebClient, etc.
      */
     @Bean
     public SSLContext customSslContext() {
-        log.info("Initializing custom SSL context with CDP certificates");
+        log.info("Initializing custom SSL context with CDP and RDS certificates");
 
         try {
             // Load custom certificates
-            X509Certificate cert = certificateLoader.loadCustomCertificate();
+            X509Certificate cdpCert = certificateLoader.loadCdpCertificate();
+            X509Certificate rdsCert = certificateLoader.loadRdsCertificate();
 
             // Create combined trust manager
-            X509TrustManager combinedTrustManager = createCombinedTrustManager(cert);
+            X509TrustManager combinedTrustManager = createCombinedTrustManager(cdpCert, rdsCert);
 
             // Initialize SSLContext
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new TrustManager[]{combinedTrustManager}, new SecureRandom());
 
-            log.info("Custom SSL context initialized successfully with 1 custom certificate");
+            int certCount = (cdpCert != null ? 1 : 0) + (rdsCert != null ? 1 : 0);
+            log.info("Custom SSL context initialized successfully with {} custom certificate(s)", certCount);
 
             return sslContext;
 
@@ -78,7 +78,7 @@ public class TrustStoreConfiguration {
     /**
      * Creates a trust manager that combines default JVM certificates with custom certificates.
      */
-    private X509TrustManager createCombinedTrustManager(X509Certificate cert) 
+    private X509TrustManager createCombinedTrustManager(X509Certificate cdpCert, X509Certificate rdsCert)
             throws Exception {
 
         // Get default trust manager
@@ -94,18 +94,24 @@ public class TrustStoreConfiguration {
             .orElseThrow(() -> new IllegalStateException("No default X509TrustManager found"));
 
         // If no custom certificates, just use default
-        if (cert == null) {
+        if (cdpCert == null && rdsCert == null) {
             log.info("No custom certificates found, using default JVM trust store only");
             return defaultTrustManager;
         }
 
-        // Create custom trust manager with CDP certificates
+        // Create custom trust manager with CDP and RDS certificates
         KeyStore customKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         customKeyStore.load(null, null); // Initialize empty
 
-        customKeyStore.setCertificateEntry("TRUSTSTORE_CDP_ROOT_CA", cert);
+        if (cdpCert != null) {
+            customKeyStore.setCertificateEntry("TRUSTSTORE_CDP_ROOT_CA", cdpCert);
+            log.debug("Added certificate to custom trust store: TRUSTSTORE_CDP_ROOT_CA");
+        }
 
-        log.debug("Added certificate to custom trust store: TRUSTSTORE_CDP_ROOT_CA");
+        if (rdsCert != null) {
+            customKeyStore.setCertificateEntry("TRUSTSTORE_RDS_ROOT_CA", rdsCert);
+            log.debug("Added certificate to custom trust store: TRUSTSTORE_RDS_ROOT_CA");
+        }
         
         TrustManagerFactory customTmf = TrustManagerFactory.getInstance(
             TrustManagerFactory.getDefaultAlgorithm()
