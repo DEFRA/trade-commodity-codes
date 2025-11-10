@@ -10,8 +10,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import uk.gov.defra.cdp.trade.demo.domain.enumerations.MarketingStandard;
-import uk.gov.defra.cdp.trade.demo.domain.enumerations.RegulatoryAuthority;
+import uk.gov.defra.cdp.trade.demo.enumerations.MarketingStandard;
+import uk.gov.defra.cdp.trade.demo.enumerations.RegulatoryAuthority;
 
 @Getter
 @Setter

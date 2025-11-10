@@ -12,6 +12,11 @@ spring:
     password: postgres
     ssl:
       enabled: false
+  liquibase:
+    change-log: classpath:db.changelog.xml
+    enabled: true
+    user: postgres
+    password: postgres
 
 # CDP platform configuration
 cdp:
@@ -60,9 +65,6 @@ management:
   info:
     env:
       enabled: true
-  health:
-    mongo:
-      enabled: false
 
 # Application info (exposed via /info endpoint)
 info:
