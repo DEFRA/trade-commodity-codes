@@ -1,132 +1,145 @@
 package uk.gov.defra.cdp.trade.demo.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.nio.charset.StandardCharsets;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.slf4j.LoggerFactory;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 /**
- * Integration test for ECS (Elastic Common Schema) structured logging.
- * Verifies that logs are in JSON format with all required CDP fields.
+ * Integration test for ECS (Elastic Common Schema) structured logging. Verifies that logs are in
+ * JSON format with all required CDP fields.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
 class EcsLoggingIT extends IntegrationBase {
 
-    @Autowired
-    private MockMvc mockMvc;
+  private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+  private final PrintStream originalOut = System.out;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+  @BeforeEach
+  void setUp() {
+    System.setOut(new PrintStream(outputStreamCaptor));
+  }
 
-    @BeforeEach
-    void setUp() {
-        System.setOut(new PrintStream(outputStreamCaptor));
-    }
+  @AfterEach
+  void tearDown() {
+    System.setOut(originalOut);
+  }
 
-    @AfterEach
-    void tearDown() {
-        System.setOut(originalOut);
-    }
+  @Test
+  void requestLogging_shouldProduceEcsJsonFormat() throws Exception {
+    // Make a request with CDP trace ID header
+    webClient()
+        .get()
+        .uri("/actuator/info")
+        .header("x-cdp-request-id", "test-trace-123")
+        .exchange()
+        .expectStatus()
+        .isNotFound();
 
-    @Test
-    void requestLogging_shouldProduceEcsJsonFormat() throws Exception {
-        // Make a request with CDP trace ID header
-        mockMvc.perform(get("/actuator/info")
-                        .header("x-cdp-request-id", "test-trace-123"))
-                .andExpect(status().isNotFound()); // info endpoint not exposed in prod
+    // Capture and parse log output
+    String logOutput = outputStreamCaptor.toString(StandardCharsets.UTF_8);
 
-        // Capture and parse log output
-        String logOutput = outputStreamCaptor.toString(StandardCharsets.UTF_8);
+    // Find the first valid JSON log line (skip Spring Boot banner)
+    String[] lines = logOutput.split("\n");
+    JsonNode logJson = null;
+    for (String line : lines) {
+      if (line.trim().startsWith("{")) {
+        logJson = objectMapper.readTree(line);
 
-        // Find the first valid JSON log line (skip Spring Boot banner)
-        String[] lines = logOutput.split("\n");
-        JsonNode logJson = null;
-        for (String line : lines) {
-            if (line.trim().startsWith("{")) {
-                logJson = objectMapper.readTree(line);
-
-                // Find a line that has our MDC fields (request log)
-                if (logJson.has("url.full")) {
-                    break;
-                }
-            }
+        // Find a line that has our MDC fields (request log)
+        if (logJson.has("url.full")) {
+          break;
         }
-
-        assertThat(logJson).isNotNull();
-
-        // Verify ECS required fields
-        assertThat(logJson.has("@timestamp")).isTrue();
-        assertThat(logJson.has("log.level")).isTrue();
-        assertThat(logJson.has("message")).isTrue();
-
-        // Verify CDP required fields from MDC
-        assertThat(logJson.has("trace.id")).isTrue();
-        assertThat(logJson.get("trace.id").asText()).isEqualTo("test-trace-123");
-
-        assertThat(logJson.has("http.request.method")).isTrue();
-        assertThat(logJson.get("http.request.method").asText()).isEqualTo("GET");
-
-        assertThat(logJson.has("url.full")).isTrue();
-        assertThat(logJson.get("url.full").asText()).contains("/actuator/info");
-
-        // Verify service metadata
-        assertThat(logJson.has("service.name")).isTrue();
-        assertThat(logJson.has("service.version")).isTrue();
+      }
     }
 
-    @Test
-    void healthEndpoint_shouldBeFilteredFromLogs() throws Exception {
-        // Clear previous output
-        outputStreamCaptor.reset();
+    assertThat(logJson).isNotNull();
 
-        // Make request to /health endpoint
-        mockMvc.perform(get("/health"))
-                .andExpect(status().isOk());
+    // Verify ECS required fields
+    assertThat(logJson.has("@timestamp")).isTrue();
+    assertThat(logJson.has("log.level")).isTrue();
+    assertThat(logJson.has("message")).isTrue();
 
-        String logOutput = outputStreamCaptor.toString(StandardCharsets.UTF_8);
+    // Verify CDP required fields from MDC
+    assertThat(logJson.has("trace.id")).isTrue();
+    assertThat(logJson.get("trace.id").asText()).isEqualTo("test-trace-123");
 
-        // Verify /health is NOT in any log output
-        assertThat(logOutput).doesNotContain("/health");
+    assertThat(logJson.has("http.request.method")).isTrue();
+    assertThat(logJson.get("http.request.method").asText()).isEqualTo("GET");
+
+    assertThat(logJson.has("url.full")).isTrue();
+    assertThat(logJson.get("url.full").asText()).contains("/actuator/info");
+
+    // Verify service metadata
+    assertThat(logJson.has("service.name")).isTrue();
+    assertThat(logJson.has("service.version")).isTrue();
+  }
+
+  @Test
+  void healthEndpoint_shouldBeFilteredFromLogs() throws Exception {
+    // Temporarily disable WebTestClient DEBUG logging to prevent client-side /health logs
+    Logger exchangeFunctionsLogger =
+        (Logger)
+            LoggerFactory.getLogger(
+                "org.springframework.web.reactive.function.client.ExchangeFunctions");
+    Level originalLevel = exchangeFunctionsLogger.getLevel();
+    exchangeFunctionsLogger.setLevel(Level.INFO);
+
+    try {
+      // Clear previous output
+      outputStreamCaptor.reset();
+
+      webClient().get().uri("/health").exchange().expectStatus().isOk();
+
+      String logOutput = outputStreamCaptor.toString(StandardCharsets.UTF_8);
+
+      // Verify /health is NOT in any log output
+      assertThat(logOutput).doesNotContain("/health");
+    } finally {
+      // Restore original log level
+      exchangeFunctionsLogger.setLevel(originalLevel);
     }
+  }
 
-    @Test
-    void missingTraceIdHeader_shouldLeaveTraceIdEmpty() throws Exception {
-        // Clear previous output
-        outputStreamCaptor.reset();
+  @Test
+  void missingTraceIdHeader_shouldLeaveTraceIdEmpty() throws Exception {
+    // Clear previous output
+    outputStreamCaptor.reset();
 
-        // Make request WITHOUT x-cdp-request-id header
-        mockMvc.perform(get("/actuator/info"))
-                .andExpect(status().isNotFound());
+    // Create a webClient WITHOUT the default x-cdp-request-id header
+    WebTestClient clientWithoutTraceHeader =
+        WebTestClient.bindToServer()
+            .baseUrl("http://localhost:%d".formatted(port))
+            .defaultHeader("Content-Type", "application/json")
+            // Note: No x-cdp-request-id header here
+            .build();
 
-        String logOutput = outputStreamCaptor.toString(StandardCharsets.UTF_8);
+    clientWithoutTraceHeader.get().uri("/actuator/info").exchange().expectStatus().isNotFound();
 
-        // Parse log output
-        String[] lines = logOutput.split("\n");
-        for (String line : lines) {
-            if (line.trim().startsWith("{")) {
-                JsonNode logJson = objectMapper.readTree(line);
+    String logOutput = outputStreamCaptor.toString(StandardCharsets.UTF_8);
 
-                if (logJson.has("url.full")) {
-                    // trace.id should not be present when header is missing
-                    assertThat(logJson.has("trace.id")).isFalse();
-                    break;
-                }
-            }
+    // Parse log output
+    String[] lines = logOutput.split("\n");
+    for (String line : lines) {
+      if (line.trim().startsWith("{")) {
+        JsonNode logJson = objectMapper.readTree(line);
+
+        if (logJson.has("url.full")) {
+          // trace.id should not be present when header is missing
+          assertThat(logJson.has("trace.id")).isFalse();
+          break;
         }
+      }
     }
+  }
 }
