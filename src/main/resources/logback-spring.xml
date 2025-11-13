@@ -34,7 +34,7 @@
     <logger name="org.apache.coyote" level="ERROR"/>
     <logger name="org.apache.tomcat" level="WARN"/>
     <logger name="org.apache.catalina" level="INFO"/>
-    <logger name="liquibase" level="DEBUG"/>
+    <logger name="liquibase" level="WARN"/>
     <logger name="org.hibernate" level="WARN"/>
     <logger name="io.netty" level="INFO"/>
     <logger name="org.postgresql" level="INFO"/>

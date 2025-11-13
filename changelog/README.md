@@ -109,17 +109,16 @@ Then uncomment and modify the role assignment statements in `05-permissions-chan
 
 ### Data Type Conversions
 
-| SQL Server | PostgreSQL | Notes |
-|------------|------------|-------|
-| `NVARCHAR(n)` | `VARCHAR(n)` | Unicode support maintained |
-| `NVARCHAR(MAX)` | `TEXT` | Unlimited length |
-| `BIT` | `BOOLEAN` | True/false values |
-| `BIGINT IDENTITY(1,1)` | `BIGSERIAL` | Auto-incrementing |
-| `DATETIME` | `TIMESTAMP` | Timezone-aware options available |
+| SQL Server | PostgreSQL               | Notes |
+|------------|--------------------------|-------|
+| `NVARCHAR(n)` | `VARCHAR(n)`             | Unicode support maintained |
+| `NVARCHAR(MAX)` | `TEXT` or `VARCHAR(4000)` | Unlimited length |
+| `BIT` | `BOOLEAN`                | True/false values |
+| `BIGINT IDENTITY(1,1)` | `BIGSERIAL`              | Auto-incrementing |
+| `DATETIME` | `TIMESTAMP`              | Timezone-aware options available |
 
 ### Function Adaptations
 
-- **`RIGHT()` function**: Implemented as custom function (SQL Server built-in)
 - **JSON functions**: Utilizing PostgreSQL native JSON support
 - **String manipulation**: Adapted to PostgreSQL syntax
 - **Date/time handling**: Using PostgreSQL timestamp functions
@@ -128,7 +127,6 @@ Then uncomment and modify the role assignment statements in `05-permissions-chan
 
 - **Indexes**: Optimized for PostgreSQL query planner
 - **Materialized Views**: `mv_commodity_code_stats` for reporting
-- **Constraints**: Check constraints for data validation
 - **Sequences**: Dedicated sequences for batch processing
 
 ## Development Environment
