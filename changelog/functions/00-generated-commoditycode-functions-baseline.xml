@@ -1,0 +1,11 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.7.xsd">
+
+  <changeSet id="create_or_alter_fn_commodity_category_data" author="iangriffiths (generated)" runOnChange="true">
+    <createProcedure
+      procedureName="fn_commodity_category_data"
+      path="fn_commodity_category_data.sql"
+      relativeToChangelogFile="true" />
+  </changeSet>
+</databaseChangeLog>

@@ -1,58 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <!-- ============================================================================ -->
-    <!-- Master PostgreSQL Consolidated Changelog -->
-    <!-- Generated from existing SQL Server Liquibase scripts -->
-    <!-- For ETL migration from SQL Server to PostgreSQL -->
-    <!-- ============================================================================ -->
+  <!-- Include changelog files in execution order -->
 
-    <!-- 
-    USAGE INSTRUCTIONS:
-    
-    1. Database Setup:
-       - Ensure PostgreSQL 12+ is installed and running
-       - Create target database: CREATE DATABASE commodity_db;
-       - Configure database connection properties
-    
-    2. User Management (IMPORTANT - Do this BEFORE running permissions):
-       - Create users according to your authentication method:
-         * For Azure Managed Identity: CREATE USER "identity-name" FROM EXTERNAL PROVIDER;
-         * For database auth: CREATE USER username WITH PASSWORD 'password';
-         * For LDAP/AD: Configure according to your setup
-       - Then uncomment role assignments in 05-permissions-changelog.xml
-    
-    3. Execution:
-       - Run: liquibase update
-       - Or run individual changelogs in the specified order
-    
-    4. Post-Migration:
-       - Refresh materialized views: REFRESH MATERIALIZED VIEW mv_commodity_code_stats;
-       - Run data validation checks
-       - Test application connectivity with each role
-    
-    5. ETL Integration:
-       - Use commodity_data_loader_role for ETL operations
-       - Utilize fn_log_data_load() to track data loads
-       - Use validation functions for data quality checks
-    -->
+  <!-- 1. Tables and Constraints -->
+  <include file="changes/00-generated-commoditycode-tables-baseline.xml" relativeToChangelogFile="true"/>
 
-    <!-- Include changelog files in execution order -->
-    
-    <!-- 1. Tables and Constraints -->
-    <include file="changes/01-tables-changelog.xml" relativeToChangelogFile="true"/>
-    
-    <!-- 2. Functions (required before views that use them) -->
-    <include file="changes/02-functions-changelog.xml" relativeToChangelogFile="true"/>
-    
-    <!-- 3. Views (depend on tables and functions) -->
-    <include file="changes/03-views-changelog.xml" relativeToChangelogFile="true"/>
-    
-    <!-- 4. Additional Objects (triggers, types, sequences, etc.) -->
-    <include file="changes/04-additional-objects-changelog.xml" relativeToChangelogFile="true"/>
-    
+  <!-- 2. Functions and Views - always last -->
+  <include file="functions/functions.xml" relativeToChangelogFile="true"/>
+  <include file="views/views.xml" relativeToChangelogFile="true"/>
+
+
 </databaseChangeLog>
