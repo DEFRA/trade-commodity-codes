@@ -7,8 +7,8 @@ import java.util.stream.IntStream;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import uk.gov.defra.cdp.trade.demo.domain.SupplementaryData;
-import uk.gov.defra.cdp.trade.demo.enumerations.RegulatoryAuthority;
 import uk.gov.defra.cdp.trade.demo.dto.CommodityEppoCodesMappingDto;
+import uk.gov.defra.cdp.trade.demo.enumerations.RegulatoryAuthority;
 
 public interface SupplementaryDataRepository extends CrudRepository<SupplementaryData, Integer> {
   @Query(
@@ -22,16 +22,16 @@ public interface SupplementaryDataRepository extends CrudRepository<Supplementar
               + " (SELECT DISTINCT code, traces_commodity_code, eppo_code, "
               + "                  inspection_responsibility "
               + "  FROM inspection_responsibility "
-              + "  WITH (NOLOCK index(ix_inspection_responsibility_traces_commodity_and_eppo_code))"
+//              + "  WITH (NOLOCK index(ix_inspection_responsibility_traces_commodity_and_eppo_code))"
               + "  WHERE traces_commodity_code = :commodityCode "
               + "  AND eppo_code IN :eppoCodes"
               + "  ) ir "
               + "LEFT OUTER JOIN hmi_marketing hm  "
-              + "WITH (NOLOCK index(ix_hmi_marketing_traces_commodity_and_eppo_code)) "
+//              + "WITH (NOLOCK index(ix_hmi_marketing_traces_commodity_and_eppo_code)) "
               + "ON hm.traces_commodity_code = ir.traces_commodity_code "
               + "AND hm.eppo_code = ir.eppo_code "
               + "LEFT JOIN commodity_eppo_variety cev "
-              + "WITH (NOLOCK index(ix_commodity_eppo_variety)) "
+//              + "WITH (NOLOCK index(ix_commodity_eppo_variety)) "
               + "ON cev.traces_commodity_code = ir.traces_commodity_code "
               + "AND cev.eppo_code = ir.eppo_code AND cev.variety = hm.variety")
   List<SupplementaryData> findAllByCommodityCodeAndEppoCodeIn(
@@ -48,7 +48,7 @@ public interface SupplementaryDataRepository extends CrudRepository<Supplementar
         + "FROM "
         + "  (SELECT code, traces_commodity_code, eppo_code, inspection_responsibility "
         + "    FROM inspection_responsibility "
-        + "    WITH (NOLOCK index(ix_inspection_responsibility_traces_commodity_and_eppo_code)) "
+//        + "    WITH (NOLOCK index(ix_inspection_responsibility_traces_commodity_and_eppo_code)) "
         + "    WHERE traces_commodity_code IN :commodityCodes "
         + "    AND eppo_code IN "
         + "    (SELECT cte.eppo FROM (VALUES " + commodityToEppoCodeMappingsStructure + ") "
@@ -57,11 +57,11 @@ public interface SupplementaryDataRepository extends CrudRepository<Supplementar
         + "    ) "
         + "  ) ir "
         + "LEFT OUTER JOIN hmi_marketing hm "
-        + "WITH (NOLOCK index(ix_hmi_marketing_traces_commodity_and_eppo_code)) "
+//        + "WITH (NOLOCK index(ix_hmi_marketing_traces_commodity_and_eppo_code)) "
         + "ON hm.traces_commodity_code = ir.traces_commodity_code "
         + "AND hm.eppo_code = ir.eppo_code "
         + "LEFT JOIN commodity_eppo_variety cev "
-        + "WITH (NOLOCK index(ix_commodity_eppo_variety)) "
+//        + "WITH (NOLOCK index(ix_commodity_eppo_variety)) "
         + "ON cev.traces_commodity_code = ir.traces_commodity_code "
         + "AND cev.eppo_code = ir.eppo_code AND cev.variety = hm.variety";
     jakarta.persistence.Query query = entityManager.createNativeQuery(queryString);

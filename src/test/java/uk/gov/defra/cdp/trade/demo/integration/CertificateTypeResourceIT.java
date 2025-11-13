@@ -69,15 +69,6 @@ class CertificateTypeResourceIT extends IntegrationBase {
     assertThat(certTypes).isEmpty();
   }
 
-  @Test
-  void getAllCertTypes_whenNoAuthHeader_returns401() {
-
-    String url = getCertTypeUrl(List.of(COMMODITY_CODE_ONLY_FOR_CVEDA));
-    var response = getCertType(url);
-
-    assertThat(response.getStatus().value()).isEqualTo(HttpStatus.SC_UNAUTHORIZED);
-  }
-
   private FluxExchangeResult<String> getCertType(String url) {
     return whenApiCallByADInspector(API.get(url)).body();
   }

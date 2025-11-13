@@ -11,7 +11,7 @@ public interface CommodityAttributeRepository extends
     CrudRepository<CommodityAttribute, String> {
   @Query(nativeQuery = true, value = "select distinct result.code, result.traces_commodity_code, "
           + "result.propagation "
-          + "from commodity_attributes ca cross apply "
+          + "from commodity_attributes ca inner join "
           + "(select top 1 * from commodity_attributes where "
           + "commodity_attributes.traces_commodity_code = ca.traces_commodity_code) "
           + "result where ca.traces_commodity_code IN :commodityCodes")

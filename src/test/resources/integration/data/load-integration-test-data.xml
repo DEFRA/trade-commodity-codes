@@ -1,33 +1,32 @@
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd
-                      http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
   <changeSet id="IMTA-7974-certificates-data" author="commodityCodeMS">
     <loadData tableName="certificates" file="integration/data/certificates.csv"/>
-    <sql>
-      SET IDENTITY_INSERT data_load OFF;
-      SET IDENTITY_INSERT certification_nomenclature ON;
-    </sql>
+<!--    <sql>-->
+<!--      SET IDENTITY_INSERT certification_nomenclature ON;-->
+<!--    </sql>-->
     <loadData tableName="certification_nomenclature" file="integration/data/certification_nomenclature.csv"/>
     <loadData tableName="certification_requirement" file="integration/data/certification_requirement.csv"/>
     <loadData tableName="commodity_attributes" file="integration/data/commodity_attributes.csv"/>
     <loadData tableName="commodity_class" file="integration/data/commodity_class.csv"/>
-    <sql>
-      SET IDENTITY_INSERT certification_nomenclature OFF;
-      SET IDENTITY_INSERT commodity_configuration ON;
-    </sql>
+<!--    <sql>-->
+<!--      SET IDENTITY_INSERT certification_nomenclature OFF;-->
+<!--      SET IDENTITY_INSERT commodity_configuration ON;-->
+<!--    </sql>-->
     <loadData tableName="commodity_configuration" file="integration/data/commodity_configuration.csv"/>
     <loadData tableName="commodity_eppo_variety" file="integration/data/commodity_eppo_variety.csv"/>
-    <sql>
-      SET IDENTITY_INSERT commodity_configuration OFF;
-      SET IDENTITY_INSERT commodity_group ON;
-    </sql>
+<!--    <sql>-->
+<!--      SET IDENTITY_INSERT commodity_configuration OFF;-->
+<!--      SET IDENTITY_INSERT commodity_group ON;-->
+<!--    </sql>-->
     <loadData tableName="commodity_group" file="integration/data/commodity_group.csv"/>
-    <sql>
-      SET IDENTITY_INSERT commodity_group OFF;
-      SET IDENTITY_INSERT commodity_group_commodity ON;
-    </sql>
+<!--    <sql>-->
+<!--      SET IDENTITY_INSERT commodity_group OFF;-->
+<!--      SET IDENTITY_INSERT commodity_group_commodity ON;-->
+<!--    </sql>-->
     <loadData tableName="commodity_group_commodity" file="integration/data/commodity_group_commodity.csv"/>
-    <loadData tableName="commodity_nomenclature" file="integration/data/commodity_nomenclature.csv"/>
+    <loadData tableName="commodity_nomenclature" file="integration/data/commodity_nomenclature.csv" />
     <loadData tableName="article_72_commodities" file="integration/data/article_72_commodities.csv"/>
     <loadData tableName="inspection_responsibility" file="integration/data/inspection_responsibility.csv"/>
     <loadData tableName="hmi_marketing" file="integration/data/hmi_marketing.csv"/>

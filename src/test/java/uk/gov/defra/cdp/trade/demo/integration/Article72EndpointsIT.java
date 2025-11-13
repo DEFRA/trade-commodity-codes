@@ -1,7 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.integration;
 
 
-import static uk.gov.defra.cdp.trade.demo.integration.API.searchArticle72Url;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.defra.cdp.trade.demo.domain.Article72SearchPayload;
@@ -21,7 +20,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isOk()
@@ -40,7 +39,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isOk()
@@ -59,7 +58,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isBadRequest();
@@ -73,7 +72,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isBadRequest();
@@ -87,7 +86,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isBadRequest();
@@ -101,7 +100,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isBadRequest();
@@ -115,7 +114,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isBadRequest();
@@ -129,7 +128,7 @@ class Article72EndpointsIT extends IntegrationBase {
 
     webClient()
         .post()
-        .uri(searchArticle72Url())
+        .uri("/article-72")
         .bodyValue(searchPayload)
         .exchange()
         .expectStatus().isBadRequest();

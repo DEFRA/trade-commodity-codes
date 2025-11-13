@@ -3,6 +3,7 @@ package uk.gov.defra.cdp.trade.demo.integration;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -71,6 +72,9 @@ abstract class IntegrationBase {
           bytes,
           mapper.getTypeFactory().constructCollectionType(ArrayList.class, clazz));
     } catch (IOException e) {
+      // Debug: Print the actual response when JSON parsing fails
+      String responseBody = new String(bytes, StandardCharsets.UTF_8);
+      System.err.println("Failed to parse response as list. Actual response: " + responseBody);
       throw new RuntimeException(e);
     }
   }
