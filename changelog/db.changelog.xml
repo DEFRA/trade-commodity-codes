@@ -14,5 +14,4 @@
   <include file="functions/functions.xml" relativeToChangelogFile="true"/>
   <include file="views/views.xml" relativeToChangelogFile="true"/>
 
-
 </databaseChangeLog>
