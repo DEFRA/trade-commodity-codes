@@ -12,36 +12,45 @@ CREATE OR REPLACE FUNCTION fn_commodity_category_data(
             species_json TEXT;
             invasive_species_json TEXT;
         BEGIN
+        -- drop temporary tables if they exist from previous calls
+        DROP TABLE IF EXISTS types_temp;
+        DROP TABLE IF EXISTS classes_temp;
+        DROP TABLE IF EXISTS families_temp;
+        DROP TABLE IF EXISTS models_temp;
+        DROP TABLE IF EXISTS species_temp;
+        DROP TABLE IF EXISTS invasive_species_temp;
+        DROP TABLE IF EXISTS normalised_certification_nomenclature;
+
         -- create temporary tables
-        CREATE TEMP TABLE IF NOT EXISTS types_temp (
+        CREATE TEMP TABLE types_temp (
             text      VARCHAR(250),
             value     VARCHAR(250),
             isDefault VARCHAR(10)
         ) ON COMMIT DROP;
 
-        CREATE TEMP TABLE IF NOT EXISTS classes_temp (
+        CREATE TEMP TABLE classes_temp (
             text      VARCHAR(250),
             value     VARCHAR(250),
             type      VARCHAR(250),
             isDefault VARCHAR(10)
         ) ON COMMIT DROP;
 
-        CREATE TEMP TABLE IF NOT EXISTS families_temp (
+        CREATE TEMP TABLE families_temp (
             text      VARCHAR(250),
             value     VARCHAR(250),
             clazz     VARCHAR(250),
             isDefault VARCHAR(10)
         ) ON COMMIT DROP;
 
-        CREATE TEMP TABLE IF NOT EXISTS models_temp (
+        CREATE TEMP TABLE models_temp (
             text      VARCHAR(250),
             value     VARCHAR(250),
             family    VARCHAR(250),
             isDefault VARCHAR(10),
-            tcfPermutation TEXT
+            tcfPermutation TEXT UNIQUE
         ) ON COMMIT DROP;
 
-        CREATE TEMP TABLE IF NOT EXISTS species_temp (
+        CREATE TEMP TABLE species_temp (
             text      VARCHAR(250),
             eppoCode  VARCHAR(10),
             value     VARCHAR(250),
@@ -49,12 +58,12 @@ CREATE OR REPLACE FUNCTION fn_commodity_category_data(
             isDefault VARCHAR(10)
         ) ON COMMIT DROP;
 
-        CREATE TEMP TABLE IF NOT EXISTS invasive_species_temp (
+        CREATE TEMP TABLE invasive_species_temp (
             species    VARCHAR(250),
             isInvasive VARCHAR(5)
         ) ON COMMIT DROP;
 
-        CREATE TEMP TABLE IF NOT EXISTS normalised_certification_nomenclature (
+        CREATE TEMP TABLE normalised_certification_nomenclature (
             certification_requirement_code  VARCHAR(250),
             commodity_type_name             VARCHAR(250),
             commodity_type_id               VARCHAR(250),
@@ -174,13 +183,14 @@ CREATE OR REPLACE FUNCTION fn_commodity_category_data(
                 commodity_type_name,
                 class_name,
                 family_name,
-                ROW_NUMBER() OVER (PARTITION BY family_name, class_name, commodity_type_name ORDER BY family_name, class_name, commodity_type_name) AS rn
+                ROW_NUMBER() OVER (PARTITION BY family_name, class_name, commodity_type_name ORDER BY complement_id, family_id) AS rn
             FROM normalised_certification_nomenclature
         )
         INSERT INTO models_temp(text, value, family, isDefault, tcfPermutation)
-        SELECT DISTINCT '', complement_id, family_id, '0', CONCAT(commodity_type_name, '-', class_name, '-', family_name)
+        SELECT '', complement_id, family_id, '0', CONCAT(commodity_type_name, '-', class_name, '-', family_name)
         FROM unique_models
-        WHERE rn = 1;
+        WHERE rn = 1
+        ON CONFLICT (tcfPermutation) DO NOTHING;
 
         -- get all unique species for fields species_id, complement_id then insert them into the temporary species table
         WITH unique_species AS (
