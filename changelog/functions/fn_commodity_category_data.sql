@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION fn_commodity_category_data(
-        certification_requirement_code VARCHAR(250),
+        input_certification_requirement_code VARCHAR(250),
         certification_type VARCHAR(250),
         traces_commodity_code VARCHAR(250))
         RETURNS TEXT AS $$
@@ -121,7 +121,7 @@ CREATE OR REPLACE FUNCTION fn_commodity_category_data(
             COALESCE(CAST(cn.is_default_species AS VARCHAR), '0'),
             cn.complement_id
         FROM certification_nomenclature cn
-        WHERE certification_requirement_code = cn.certification_requirement_code
+        WHERE input_certification_requirement_code = cn.certification_requirement_code
           AND ((certification_type = '851')
             OR (certification_type != '851' AND cn.commodity_type_id IS NOT NULL));
 

@@ -85,8 +85,7 @@ Then uncomment and modify the role assignment statements in `05-permissions-chan
 | `commodity_group_commodity` | Individual group members | Links to main commodity data |
 | `article_72_commodities` | Article 72 specific items | Regulatory compliance |
 | `commodity_configuration` | Configuration settings | Test/trial requirements |
-| `commoditycode_attributes` | Extended commodity attributes | Effective date management |
-| `data_load` | ETL audit trail | Load tracking and monitoring |
+| `commodity_attributes` | Extended commodity attributes | Effective date management |
 
 ### Views (9 total)
 
@@ -98,34 +97,28 @@ Then uncomment and modify the role assignment statements in `05-permissions-chan
 | `v_chedpp_species` | CHED-PP species data | Regulatory compliance |
 | `v_chedp_species` | CHED-P species data | Extended classification |
 | `v_commodity_code_species` | Enhanced commodity+species | Comprehensive data access |
-| `v_data_load_status` | ETL monitoring | Operations dashboard |
-| `v_active_commodity_configurations` | Current configurations | Application logic |
-| `v_active_commodity_attributes` | Current attributes | Data validation |
 
 ### Security Roles (4 total)
 
-| Role | Permissions | Use Case |
-|------|-------------|----------|
-| `commodity_service_role` | Read + limited updates | Main application |
-| `commodity_data_loader_role` | Full DML access | ETL processes |
-| `commodity_readonly_role` | Read-only access | Reporting/analytics |
-| `commodity_admin_role` | Full database access | Administration |
+| Role                        | Permissions | Use Case |
+|-----------------------------|-------------|----------|
+| `trade_commodity_codes`     | Read + limited updates | Main application |
+| `trade_commodity_codes_ddl` | Full database access | Administration |
 
 ## Key PostgreSQL Adaptations
 
 ### Data Type Conversions
 
-| SQL Server | PostgreSQL | Notes |
-|------------|------------|-------|
-| `NVARCHAR(n)` | `VARCHAR(n)` | Unicode support maintained |
-| `NVARCHAR(MAX)` | `TEXT` | Unlimited length |
-| `BIT` | `BOOLEAN` | True/false values |
-| `BIGINT IDENTITY(1,1)` | `BIGSERIAL` | Auto-incrementing |
-| `DATETIME` | `TIMESTAMP` | Timezone-aware options available |
+| SQL Server | PostgreSQL               | Notes |
+|------------|--------------------------|-------|
+| `NVARCHAR(n)` | `VARCHAR(n)`             | Unicode support maintained |
+| `NVARCHAR(MAX)` | `TEXT` or `VARCHAR(4000)` | Unlimited length |
+| `BIT` | `BOOLEAN`                | True/false values |
+| `BIGINT IDENTITY(1,1)` | `BIGSERIAL`              | Auto-incrementing |
+| `DATETIME` | `TIMESTAMP`              | Timezone-aware options available |
 
 ### Function Adaptations
 
-- **`RIGHT()` function**: Implemented as custom function (SQL Server built-in)
 - **JSON functions**: Utilizing PostgreSQL native JSON support
 - **String manipulation**: Adapted to PostgreSQL syntax
 - **Date/time handling**: Using PostgreSQL timestamp functions
@@ -134,7 +127,6 @@ Then uncomment and modify the role assignment statements in `05-permissions-chan
 
 - **Indexes**: Optimized for PostgreSQL query planner
 - **Materialized Views**: `mv_commodity_code_stats` for reporting
-- **Constraints**: Check constraints for data validation
 - **Sequences**: Dedicated sequences for batch processing
 
 ## Development Environment

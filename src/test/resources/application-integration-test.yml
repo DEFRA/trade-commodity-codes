@@ -12,6 +12,11 @@ spring:
     password: postgres
     ssl:
       enabled: false
+  liquibase:
+    change-log: classpath:integration/migrations.xml
+    enabled: true
+    user: postgres
+    password: postgres
 
 # CDP platform configuration
 cdp:
@@ -39,12 +44,12 @@ aws:
 # Logging configuration
 logging:
   level:
-    root: ${LOG_LEVEL:INFO}
-    uk.gov.defra.cdp.trade.demo: ${LOG_LEVEL:INFO}
-    uk.gov.defra.cdp.trade.demo.common.metrics: ${LOGGING_LEVEL_UK_GOV_DEFRA_CDP_TRADE_DEMO_COMMON_METRICS:INFO}
-    org.springframework: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK:INFO}
-    org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:DEBUG}
-    org.mongodb.driver: ${LOGGING_LEVEL_ORG_MONGODB_DRIVER:WARN}
+    root: INFO
+    uk.gov.defra.cdp.trade.demo: INFO
+    uk.gov.defra.cdp.trade.demo.common.metrics: INFO
+    org.springframework: INFO
+    org.springframework.web: DEBUG
+    liquibase: DEBUG
 
 # Actuator endpoints
 # Production: Only health endpoint exposed (secure by default)
@@ -60,9 +65,6 @@ management:
   info:
     env:
       enabled: true
-  health:
-    mongo:
-      enabled: false
 
 # Application info (exposed via /info endpoint)
 info:

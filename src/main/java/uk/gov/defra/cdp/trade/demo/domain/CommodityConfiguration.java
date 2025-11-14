@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import uk.gov.defra.cdp.trade.demo.domain.converter.ChedTypeConverter;
-import uk.gov.defra.cdp.trade.demo.domain.enumerations.ChedType;
+import uk.gov.defra.cdp.trade.demo.enumerations.ChedType;
 
 @Getter
 @AllArgsConstructor
