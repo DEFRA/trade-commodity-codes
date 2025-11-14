@@ -3,10 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-  <include file="changes/01-tables-changelog.xml"/>
-  <include file="changes/02-functions-changelog.xml"/>
-  <include file="changes/03-views-changelog.xml"/>
-  <include file="changes/04-additional-objects-changelog.xml"/>
+  <include file="db.changelog.xml"/>
 
   <!-- Load commodity codes integration test data -->
   <include file="integration/data/load-integration-test-data.xml"/>

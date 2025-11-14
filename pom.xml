@@ -236,6 +236,8 @@
                   <includes>
                     <include>**/*.xml</include>
                     <include>changes/*.xml</include>
+                    <include>functions/*.*</include>
+                    <include>views/*.*</include>
                   </includes>
                 </resource>
               </resources>
