@@ -1,0 +1,304 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+  <changeSet author="iangriffiths (generated)" id="1762966394888-6">
+    <createTable tableName="article_72_commodities">
+      <column computed="false" name="id" type="bigint">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_ARTICLE_72_COMMODITIES"/>
+      </column>
+      <column computed="false" name="commodity_code" type="varchar(13)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="eppo_code" type="varchar(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="commodity_group" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-22">
+    <createTable tableName="certificates">
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CERTIFICATES"/>
+      </column>
+      <column computed="false" name="short_description" type="varchar(4000)"/>
+      <column computed="false" name="effective_from" type="timestamp"/>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_certificates_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_certificates_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-23">
+    <createTable tableName="certification_nomenclature">
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CERTIFICATION_NOMENCLATURE"/>
+      </column>
+      <column computed="false" name="certification_requirement_code" type="varchar(250)"/>
+      <column computed="false" name="effective_from" type="timestamp"/>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" name="commodity_type_code" type="varchar(250)"/>
+      <column computed="false" name="commodity_type_name" type="varchar(250)"/>
+      <column computed="false" name="commodity_type_id" type="int"/>
+      <column computed="false" name="is_default_commodity_type" type="boolean"/>
+      <column computed="false" name="class_code" type="varchar(250)"/>
+      <column computed="false" name="class_name" type="varchar(250)"/>
+      <column computed="false" name="class_id" type="int"/>
+      <column computed="false" name="is_default_class" type="boolean"/>
+      <column computed="false" name="family_code" type="varchar(250)"/>
+      <column computed="false" name="family_name" type="varchar(250)"/>
+      <column computed="false" name="family_id" type="int"/>
+      <column computed="false" name="is_default_family" type="boolean"/>
+      <column computed="false" name="species_code" type="varchar(250)"/>
+      <column computed="false" name="species_name" type="varchar(250)"/>
+      <column computed="false" name="species_id" type="int"/>
+      <column computed="false" name="is_default_species" type="boolean"/>
+      <column autoIncrement="true" computed="false" name="complement_id" type="bigint">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_certification_nomenclature_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_certification_nomenclature_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-24">
+    <createTable tableName="certification_requirement">
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CERTIFICATION_REQUIREMENT"/>
+      </column>
+      <column computed="false" name="certification_requirement_code" type="varchar(250)"/>
+      <column computed="false" name="commodity_nomenclature_id_code" type="varchar(250)"/>
+      <column computed="false" name="effective_from" type="timestamp"/>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" name="is_selectable" type="boolean"/>
+      <column computed="false" name="is_traces_visible" type="boolean"/>
+      <column computed="false" name="traces_parent_code" type="varchar(200)"/>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_certification_requirement_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_certification_requirement_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-28">
+    <createTable tableName="commodity_attributes">
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_COMMODITY_ATTRIBUTES"/>
+      </column>
+      <column computed="false" name="traces_commodity_code" type="varchar(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="propagation" type="varchar(50)"/>
+      <column computed="false" name="effective_from" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_commodity_attributes_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_commodity_attributes_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-30">
+    <createTable tableName="commodity_class">
+      <column computed="false" name="traces_commodity_code" type="varchar(100)"/>
+      <column computed="false" name="class" type="varchar(500)"/>
+      <column computed="false" name="effective_from" type="varchar(255)"/>
+      <column computed="false" name="effective_to" type="varchar(255)"/>
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK__commodit__357D4CF8513489A9"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_commodity_class_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_commodity_class_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-32">
+    <createTable tableName="commodity_configuration">
+      <column autoIncrement="true" computed="false" name="id" type="bigint">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_COMMODITY_CONFIGURATION"/>
+      </column>
+      <column computed="false" name="commodity_code" type="varchar(13)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="type" type="varchar(10)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="requires_test_and_trial" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="requires_finished_or_propagated" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-33">
+    <createTable tableName="commodity_eppo_variety">
+      <column computed="false" name="traces_commodity_code" type="varchar(100)"/>
+      <column computed="false" name="eppo_code" type="varchar(500)"/>
+      <column computed="false" name="variety" type="varchar(500)"/>
+      <column computed="false" name="effective_from" type="varchar(255)"/>
+      <column computed="false" name="effective_to" type="varchar(255)"/>
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK__commodit__357D4CF8077CBA02"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_commodity_eppo_variety_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_commodity_eppo_variety_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-34">
+    <createTable tableName="commodity_group">
+      <column autoIncrement="true" computed="false" name="id" type="bigint">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_COMMODITY_GROUP"/>
+      </column>
+      <column computed="false" name="description" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="code" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_from" type="timestamp"/>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_commodity_group_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_commodity_group_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-35">
+    <createTable tableName="commodity_group_commodity">
+      <column autoIncrement="true" computed="false" name="id" type="bigint">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_COMMODITY_GROUP_COMMODITY"/>
+      </column>
+      <column computed="false" name="name" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="code" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="traces_commodity_code" type="varchar(255)"/>
+      <column computed="false" name="commodity_group_code" type="varchar(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_from" type="timestamp"/>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" name="last_chg_date_time" type="timestamp"/>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_commodity_group_commodity_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_commodity_group_commodity_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-36">
+    <createTable tableName="commodity_nomenclature">
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_COMMODITY_NOMENCLATURE"/>
+      </column>
+      <column computed="false" name="sorting_key" type="varchar(100)"/>
+      <column computed="false" name="commodity_nomenclature_parent_code" type="varchar(250)"/>
+      <column computed="false" name="effective_from" type="timestamp"/>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" name="traces_commodity_code" type="varchar(200)"/>
+      <column computed="false" name="traces_commodity_code_description" type="varchar(4000)"/>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_commodity_nomenclature_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_commodity_nomenclature_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-61">
+    <createTable tableName="hmi_marketing">
+      <column computed="false" name="traces_commodity_code" type="varchar(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="eppo_code" type="varchar(500)"/>
+      <column computed="false" name="variety" type="varchar(500)"/>
+      <column computed="false" name="certificate_validity_period" type="varchar(500)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="hmi_marketing_standard" type="varchar(500)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_from" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK__hmi_mark__357D4CF82D246F47"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_hmi_marketing_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_hmi_marketing_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-65">
+    <createTable tableName="inspection_responsibility">
+      <column computed="false" name="traces_commodity_code" type="varchar(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="eppo_code" type="varchar(500)"/>
+      <column computed="false" name="inspection_responsibility" type="varchar(500)">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_from" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK__inspecti__357D4CF8B93A8BBE"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_inspection_responsibility_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_inspection_responsibility_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+  <changeSet author="iangriffiths (generated)" id="1762966394888-97">
+    <createTable tableName="species">
+      <column computed="false" name="code" type="varchar(250)">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="PK_SPECIES"/>
+      </column>
+      <column computed="false" name="effective_from" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="effective_to" type="timestamp"/>
+      <column computed="false" name="invasive_species_indicator" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" name="eppo_code" type="varchar(10)"/>
+      <column computed="false" defaultValueBoolean="false" defaultValueConstraintName="DF_species_is_deleted" name="is_deleted" type="boolean">
+        <constraints nullable="false"/>
+      </column>
+      <column computed="false" defaultValueComputed="CURRENT_TIMESTAMP" defaultValueConstraintName="DF_species_last_updated" name="last_updated" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>

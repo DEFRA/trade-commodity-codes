@@ -1,0 +1,49 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet author="iangriffiths (generated)" id="1762966394888-191">
+    <createView fullDefinition="false"
+      viewName="v_chedp_species"
+      path="chedp_species_view.sql"
+      relativeToChangelogFile="true"/>
+  </changeSet>
+
+  <changeSet author="iangriffiths (generated)" id="1762966394888-192">
+    <createView fullDefinition="false"
+      viewName="v_chedpp_species"
+      path="chedpp_species_view.sql"
+      relativeToChangelogFile="true"/>
+  </changeSet>
+
+  <changeSet author="iangriffiths (generated)" id="1762966394888-193">
+    <createView fullDefinition="false"
+      viewName="v_commodity_category"
+      path="commodity_category_view.sql"
+      relativeToChangelogFile="true"/>
+  </changeSet>
+
+  <changeSet author="iangriffiths (generated)" id="1762966394888-194">
+    <createView fullDefinition="false"
+      viewName="v_commodity_code"
+      path="commodity_code_view.sql"
+      relativeToChangelogFile="true"/>
+  </changeSet>
+
+  <changeSet author="iangriffiths (generated)" id="1762966394888-195">
+    <createView fullDefinition="false"
+      viewName="v_commodity_code_species"
+      path="commodity_code_species_view.sql"
+      relativeToChangelogFile="true"/>
+  </changeSet>
+
+  <changeSet author="iangriffiths (generated)" id="1762966394888-196">
+    <createView fullDefinition="false"
+      viewName="v_commodity_group"
+      path="commodity_group_view.sql"
+      relativeToChangelogFile="true"/>
+  </changeSet>
+</databaseChangeLog>
