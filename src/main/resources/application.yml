@@ -29,21 +29,13 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-
-
   lifecycle:
     timeout-per-shutdown-phase: 30s
   cloud:
     aws:
       cloudwatch:
-        enabled:  ${AWS_EMF_ENABLED:true}
-        endpoint: ${AWS_EMF_AGENT_ENDPOINT:tcp://localhost:4566}
+        endpoint: ${AWS_EMF_AGENT_ENDPOINT:http://localhost:4566}
         region: ${AWS_REGION:eu-west-2}
-        step: 1m
-        connectTimeout: 20s
-        readTimeout: 20s
-        batchSize: 1000
-        numThreads: 1
 
 # CDP platform configuration
 cdp:
@@ -100,10 +92,10 @@ management:
     mongo:
       enabled: false
   metrics:
+    enabled: true
     export:
       cloudwatch:
         enabled: true
-        namespace: ${AWS_EMF_NAMESPACE:trade-commodity-codes}
         step: 1m
         connectTimeout: 20s
         readTimeout: 20s

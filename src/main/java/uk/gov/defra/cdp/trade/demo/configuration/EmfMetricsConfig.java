@@ -4,21 +4,16 @@ import io.micrometer.cloudwatch2.CloudWatchConfig;
 import io.micrometer.cloudwatch2.CloudWatchMeterRegistry;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import java.net.URI;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.core.client.config.ClientAsyncConfiguration;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
-import software.amazon.cloudwatchlogs.emf.config.EnvironmentConfigurationProvider;
-import software.amazon.cloudwatchlogs.emf.environment.DefaultEnvironment;
 import software.amazon.cloudwatchlogs.emf.environment.Environment;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Configuration for AWS Embedded Metrics Format (EMF).
@@ -73,8 +68,8 @@ public class EmfMetricsConfig {
   private Environment environment;
 
     /**
-     * This class has been constructed specifically a the micrometer instance appears to be having 
-     * difficulty in pulling the values form the configuration.
+     * This class has been constructed specifically as the micrometer instance appears to be having
+     * difficulty in pulling the values from the configuration.
      * There are some of the entries set in here that are deprecated (step, batchSize, numThreads, 
      * connectTimeout, readTimeout) and no longer read from config but need to be set manually.
      * 
@@ -130,5 +125,23 @@ public class EmfMetricsConfig {
   MeterRegistry meterRegistry(CloudWatchConfig cloudWatchConfig) {
     return new CloudWatchMeterRegistry(
         cloudWatchConfig, Clock.SYSTEM, CloudWatchAsyncClient.create());
+  }
+
+  @Bean
+  public CloudWatchAsyncClient cloudWatchAsyncClient(
+      @Value("${spring.cloud.aws.cloudwatch.endpoint}") String cloudwatchUri,
+      @Value("${spring.cloud.aws.cloudwatch.region}") String region) {
+    return CloudWatchAsyncClient.builder()
+        .endpointOverride(URI.create(cloudwatchUri))
+        .region(Region.of(region)) // your region
+        .build();
+  }
+
+  @Bean
+  public CloudWatchMeterRegistry cloudWatchMeterRegistry(
+      CloudWatchConfig cloudWatchConfig,
+      CloudWatchAsyncClient cloudWatchAsyncClient,
+      Clock clock) {
+    return new CloudWatchMeterRegistry(cloudWatchConfig, clock, cloudWatchAsyncClient);
   }
 }

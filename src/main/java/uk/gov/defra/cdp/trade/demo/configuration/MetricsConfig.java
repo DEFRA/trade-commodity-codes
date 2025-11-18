@@ -1,18 +1,12 @@
 package uk.gov.defra.cdp.trade.demo.configuration;
 
-import io.micrometer.cloudwatch2.CloudWatchConfig;
-import io.micrometer.cloudwatch2.CloudWatchMeterRegistry;
 import io.micrometer.core.aop.TimedAspect;
-import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuration for Micrometer metrics.
@@ -27,6 +21,7 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
  * When enabled, Spring Boot Actuator auto-configures appropriate registries.
  */
 @Slf4j
+@Configuration
 public class MetricsConfig {
 
   /**
@@ -47,23 +42,5 @@ public class MetricsConfig {
   @Bean
   public TimedAspect timedAspect(MeterRegistry registry) {
     return new TimedAspect(registry);
-  }
-
-  @Bean
-  public CloudWatchAsyncClient cloudWatchAsyncClient(
-      @Value("${spring.cloud.aws.cloudwatch.endpoint}") String cloudwatchUri,
-      @Value("${spring.cloud.aws.cloudwatch.region}") String region) {
-    return CloudWatchAsyncClient.builder()
-        .endpointOverride(URI.create(cloudwatchUri))
-        .region(Region.of(region)) // your region
-        .build();
-  }
-
-  @Bean
-  public CloudWatchMeterRegistry cloudWatchMeterRegistry(
-      CloudWatchConfig cloudWatchConfig,
-      CloudWatchAsyncClient cloudWatchAsyncClient,
-      Clock clock) {
-    return new CloudWatchMeterRegistry(cloudWatchConfig, clock, cloudWatchAsyncClient);
   }
 }
