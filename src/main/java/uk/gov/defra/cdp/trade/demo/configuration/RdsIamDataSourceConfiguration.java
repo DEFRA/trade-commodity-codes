@@ -2,6 +2,11 @@ package uk.gov.defra.cdp.trade.demo.configuration;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.time.LocalDateTime;
+import java.util.Properties;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import javax.net.ssl.SSLContext;
+import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,12 +19,6 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.rds.RdsUtilities;
 import software.amazon.awssdk.services.rds.model.GenerateAuthenticationTokenRequest;
-
-import javax.net.ssl.SSLContext;
-import javax.sql.DataSource;
-import java.time.LocalDateTime;
-import java.util.Properties;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Configures a DataSource with AWS RDS IAM authentication.
@@ -157,6 +156,7 @@ public class RdsIamDataSourceConfiguration {
       // Force HikariCP to refresh connections with new token
       dataSource.getHikariConfigMXBean().setPassword(newToken);
       dataSource.getHikariPoolMXBean().softEvictConnections();
+      dataSource.getHikariPoolMXBean().resumePool();
       
       log.info("Successfully refreshed RDS IAM authentication token");
       
