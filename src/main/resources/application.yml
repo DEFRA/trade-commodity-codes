@@ -20,8 +20,8 @@ spring:
       max-lifetime: ${POSTGRES_MAX_LIFETIME:600000}
       connection-timeout: ${POSTGRES_CONNECTION_TIMEOUT:30000}
       connection-test-query: SELECT 1
-
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:none}
     show-sql: ${JPA_SHOW_SQL:false}
