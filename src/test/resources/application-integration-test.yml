@@ -65,6 +65,8 @@ management:
   info:
     env:
       enabled: true
+  metrics:
+    enabled: false
 
 # Application info (exposed via /info endpoint)
 info:

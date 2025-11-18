@@ -16,6 +16,8 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  metrics:
+    enabled: false
 spring:
   datasource:
     username: postgres
