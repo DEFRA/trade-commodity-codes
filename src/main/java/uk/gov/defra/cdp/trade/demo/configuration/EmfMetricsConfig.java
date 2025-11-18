@@ -131,6 +131,7 @@ public class EmfMetricsConfig {
   public CloudWatchAsyncClient cloudWatchAsyncClient(
       @Value("${spring.cloud.aws.cloudwatch.endpoint}") String cloudwatchUri,
       @Value("${spring.cloud.aws.cloudwatch.region}") String region) {
+    log.info("Cloudwatch is currently sending to {}", cloudwatchUri);
     return CloudWatchAsyncClient.builder()
         .endpointOverride(URI.create(cloudwatchUri))
         .region(Region.of(region)) // your region
