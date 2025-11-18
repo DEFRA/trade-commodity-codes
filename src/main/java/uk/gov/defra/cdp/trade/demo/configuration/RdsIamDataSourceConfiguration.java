@@ -8,6 +8,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.rds.RdsUtilities;
@@ -15,22 +17,26 @@ import software.amazon.awssdk.services.rds.model.GenerateAuthenticationTokenRequ
 
 import javax.net.ssl.SSLContext;
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
 import java.util.Properties;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Configures a DataSource with AWS RDS IAM authentication.
  *
  * This configuration:
  * - Generates short-lived authentication tokens from AWS RDS (valid for 15 minutes)
+ * - Proactively refreshes tokens every 12 minutes via scheduled task
  * - Configures HikariCP to refresh tokens before they expire
  * - Enables SSL/TLS connections to RDS using custom SSLContext
  * - Only activates when aws.rds.iam.enabled=true
  *
- * Token refresh is handled automatically by HikariCP's connection validation and
- * max-lifetime settings, which force reconnection before token expiry.
+ * Token refresh is handled both by scheduled refresh and HikariCP's connection
+ * validation to ensure tokens never expire during active connections.
  */
 @Configuration
 @ConditionalOnProperty(name = "aws.rds.iam.enabled", havingValue = "true")
+@EnableScheduling
 @Slf4j
 public class RdsIamDataSourceConfiguration {
 
@@ -50,6 +56,10 @@ public class RdsIamDataSourceConfiguration {
   private String awsRegion;
 
   private final SSLContext sslContext;
+  private HikariDataSource dataSource;
+  private volatile String currentToken;
+  private volatile LocalDateTime tokenExpiryTime;
+  private final ReentrantReadWriteLock tokenLock = new ReentrantReadWriteLock();
 
   public RdsIamDataSourceConfiguration(SSLContext sslContext) {
     this.sslContext = sslContext;
@@ -77,8 +87,15 @@ public class RdsIamDataSourceConfiguration {
     config.setJdbcUrl(jdbcUrl);
     config.setUsername(username);
 
-    // Configure token generation and refresh
-    config.setPassword(generateAuthToken());
+    // Initialize token tracking
+    tokenLock.writeLock().lock();
+    try {
+      currentToken = generateAuthToken();
+      tokenExpiryTime = LocalDateTime.now().plusMinutes(15);
+      config.setPassword(currentToken);
+    } finally {
+      tokenLock.writeLock().unlock();
+    }
 
     // Force connection refresh every 10 minutes (tokens expire after 15)
     config.setMaxLifetime(600000); // 10 minutes in milliseconds
@@ -100,9 +117,54 @@ public class RdsIamDataSourceConfiguration {
     // Configure custom SSLContext for CustomSSLSocketFactory
     CustomSSLSocketFactory.setCustomSslContext(sslContext);
 
+    this.dataSource = new HikariDataSource(config);
     log.info("RDS IAM DataSource configured successfully");
 
-    return new HikariDataSource(config);
+    return this.dataSource;
+  }
+
+  /**
+   * Scheduled task to refresh RDS IAM authentication token before expiry.
+   * Runs every 12 minutes (720 seconds) to refresh tokens before the 15-minute expiry.
+   * Forces HikariCP pool to evict connections and reconnect with the new token.
+   */
+  @Scheduled(fixedRate = 720000) // 12 minutes in milliseconds
+  public void refreshAuthToken() {
+    if (dataSource == null) {
+      log.debug("DataSource not yet initialized, skipping token refresh");
+      return;
+    }
+
+    tokenLock.readLock().lock();
+    try {
+      LocalDateTime now = LocalDateTime.now();
+      if (tokenExpiryTime != null && now.isBefore(tokenExpiryTime.minusMinutes(3))) {
+        log.debug("Token still valid for more than 3 minutes, skipping refresh");
+        return;
+      }
+    } finally {
+      tokenLock.readLock().unlock();
+    }
+
+    log.info("Refreshing RDS IAM authentication token proactively");
+
+    tokenLock.writeLock().lock();
+    try {
+      String newToken = generateAuthToken();
+      currentToken = newToken;
+      tokenExpiryTime = LocalDateTime.now().plusMinutes(15);
+      
+      // Force HikariCP to refresh connections with new token
+      dataSource.getHikariConfigMXBean().setPassword(newToken);
+      dataSource.getHikariPoolMXBean().softEvictConnections();
+      
+      log.info("Successfully refreshed RDS IAM authentication token");
+      
+    } catch (Exception e) {
+      log.error("Failed to refresh RDS IAM authentication token: {}", e.getMessage(), e);
+    } finally {
+      tokenLock.writeLock().unlock();
+    }
   }
 
   /**
@@ -112,7 +174,7 @@ public class RdsIamDataSourceConfiguration {
    * - Valid for 15 minutes
    * - Generated using IAM credentials (no password needed)
    * - Encrypted in transit
-   * - Automatically rotated by HikariCP's connection refresh
+   * - Automatically rotated by scheduled refresh and HikariCP's connection refresh
    */
   private String generateAuthToken() {
     log.debug("Generating RDS IAM authentication token for {}@{}:{}",
