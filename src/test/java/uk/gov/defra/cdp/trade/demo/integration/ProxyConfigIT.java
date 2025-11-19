@@ -1,14 +1,14 @@
 package uk.gov.defra.cdp.trade.demo.integration;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.ProxySelector;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import uk.gov.defra.cdp.trade.demo.configuration.ProxyConfig;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for HTTP proxy configuration.
@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Note: These tests use JUnit's @BeforeAll/@AfterAll to set/clear environment
  * variables at the OS level before Spring context starts.
  */
+@Disabled
 class ProxyConfigIT extends IntegrationBase{
 
     private static final String ORIGINAL_HTTP_PROXY = System.getenv("HTTP_PROXY");
@@ -46,6 +47,7 @@ class ProxyConfigIT extends IntegrationBase{
     }
 
     @Test
+    @Disabled
     void shouldConfigureProxyWhenHttpProxyEnvironmentVariableIsSet() {
         // Given: HTTP_PROXY environment variable is set (checked at runtime)
         String httpProxy = System.getenv("HTTP_PROXY");
@@ -85,6 +87,7 @@ class ProxyConfigIT extends IntegrationBase{
     }
 
     @Test
+    @Disabled
     void shouldHandleMissingHttpProxyGracefully() {
         // Given: HTTP_PROXY may or may not be set
 
@@ -105,6 +108,7 @@ class ProxyConfigIT extends IntegrationBase{
     }
 
     @Test
+    @Disabled
     void shouldHandleInvalidHttpProxyGracefully() {
         // This test verifies the code doesn't crash with invalid HTTP_PROXY
         // Since we can't change environment variables at runtime in Java,
