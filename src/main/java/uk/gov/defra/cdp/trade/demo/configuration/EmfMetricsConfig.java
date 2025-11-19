@@ -133,7 +133,7 @@ public class EmfMetricsConfig {
       @Value("${spring.cloud.aws.cloudwatch.region}") String region) {
     log.info("Cloudwatch is currently sending to {}", cloudwatchUri);
     if (cloudwatchUri.startsWith("tcp://")) {
-      cloudwatchUri = cloudwatchUri.replace("tcp://", "https://");
+      cloudwatchUri = cloudwatchUri.replace("tcp://", "http://");
     }
     log.info("Cloudwatch will send to {}", cloudwatchUri);
     return CloudWatchAsyncClient.builder()
