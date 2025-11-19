@@ -1,13 +1,11 @@
 package uk.gov.defra.cdp.trade.demo.configuration;
 
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
 import java.net.URI;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Configures HTTP proxy for all outbound HTTP/HTTPS requests.
@@ -35,7 +33,7 @@ import java.net.URI;
  * - No HTTP_PROXY variable = direct connections (no proxy)
  * - Set HTTP_PROXY for testing proxy behavior locally
  */
-@Configuration
+
 @Slf4j
 public class ProxyConfig {
 
