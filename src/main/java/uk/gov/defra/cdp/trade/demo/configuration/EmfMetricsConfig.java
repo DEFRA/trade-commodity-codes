@@ -135,6 +135,7 @@ public class EmfMetricsConfig {
     if (cloudwatchUri.startsWith("tcp://")) {
       cloudwatchUri = cloudwatchUri.replace("tcp://", "https://");
     }
+    log.info("Cloudwatch will send to {}", cloudwatchUri);
     return CloudWatchAsyncClient.builder()
         .endpointOverride(URI.create(cloudwatchUri))
         .region(Region.of(region)) // your region
