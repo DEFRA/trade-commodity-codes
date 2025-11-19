@@ -45,7 +45,7 @@ cdp:
   service-version: ${SERVICE_VERSION:0.0.0-local}
   tracing:
     header-name: ${TRACING_HEADER:x-cdp-request-id}
-  proxyUrl: ${HTTP_PROXY:}
+  proxyUrl:
 
 # AWS configuration
 aws:
