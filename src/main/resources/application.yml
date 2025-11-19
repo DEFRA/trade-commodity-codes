@@ -31,11 +31,7 @@ spring:
         format_sql: true
   lifecycle:
     timeout-per-shutdown-phase: 30s
-  cloud:
-    aws:
-      cloudwatch:
-        endpoint: ${AWS_EMF_AGENT_ENDPOINT:http://localhost:4566}
-        region: ${AWS_REGION:eu-west-2}
+
 
 # CDP platform configuration
 cdp:
@@ -46,6 +42,9 @@ cdp:
   tracing:
     header-name: ${TRACING_HEADER:x-cdp-request-id}
   proxyUrl:
+  cloudwatch:
+    endpoint: ${AWS_EMF_AGENT_ENDPOINT:http://localhost:4566}
+    region: ${AWS_REGION:eu-west-2}
 
 # AWS configuration
 aws:
