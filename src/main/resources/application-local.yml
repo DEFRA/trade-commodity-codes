@@ -27,8 +27,10 @@ spring:
       enabled: false
   cloud:
     aws:
-      cloudwatch:
-        endpoint: http://localstack:4566
+
+cdp:
+  cloudwatch:
+    endpoint: http://localstack:4566
 
 aws:
   rds:
