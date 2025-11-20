@@ -41,6 +41,7 @@ public class MetricsConfig {
 
   @Bean
   public TimedAspect timedAspect(MeterRegistry registry) {
+    log.debug("Creating TimedAspect for {}", registry.getClass().getSimpleName());
     return new TimedAspect(registry);
   }
 }
