@@ -28,13 +28,14 @@ public class EmfMetricsPublisher {
         .getMeters()
         .forEach(
             meter -> {
-              log.debug("Publishing metrics for {}", meter.getId().getName());
               meter
                   .measure()
                   .forEach(
                       measurement -> {
                         var name = meter.getId().getName();
                         var value = measurement.getValue();
+                        log.debug("Publishing metrics for {} with a value of {}",
+                            name, value);
                         metricsLogger.putMetric(name, value);
                       });
             });
