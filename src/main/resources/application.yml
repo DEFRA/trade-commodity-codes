@@ -106,10 +106,6 @@ management:
         sessions:
           active:
             enabled: true
-      executor:
-        enabled: false
-      application:
-        enabled: false
 
 
 
