@@ -3,18 +3,21 @@ package uk.gov.defra.cdp.trade.demo.service;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import software.amazon.cloudwatchlogs.emf.logger.MetricsLogger;
 
 @Service
 @Slf4j
+@ConditionalOnProperty(name = "management.metrics.enabled", havingValue = "true")
 public class EmfMetricsPublisher {
 
   private final String namespace;
   private final MeterRegistry meterRegistry;
 
-  EmfMetricsPublisher(@Value("${aws.emf.namespace}") String namespace,
+  EmfMetricsPublisher(
+      @Value("${aws.emf.namespace}") String namespace,
       MeterRegistry meterRegistry) {
     this.namespace = namespace;
     this.meterRegistry = meterRegistry;
@@ -34,12 +37,10 @@ public class EmfMetricsPublisher {
                       measurement -> {
                         var name = meter.getId().getName();
                         var value = measurement.getValue();
-                        log.debug("Publishing metrics for {} with a value of {}",
-                            name, value);
+                        log.debug("Publishing metrics for {} with a value of {}", name, value);
                         metricsLogger.putMetric(name, value);
                       });
             });
     metricsLogger.flush();
   }
-  
 }
