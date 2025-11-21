@@ -12,7 +12,6 @@ import software.amazon.cloudwatchlogs.emf.logger.MetricsLogger;
 public class EmfMetricsPublisher {
 
   private final String namespace;
-  private final MetricsLogger metricsLogger = new MetricsLogger();
   private final MeterRegistry meterRegistry;
 
   EmfMetricsPublisher(@Value("${aws.emf.namespace}") String namespace,
@@ -23,6 +22,7 @@ public class EmfMetricsPublisher {
 
   @Scheduled(fixedRate = 60000)
   public void publishMetrics() {
+    MetricsLogger metricsLogger = new MetricsLogger();
     metricsLogger.setNamespace(namespace);
     meterRegistry
         .getMeters()
@@ -40,5 +40,5 @@ public class EmfMetricsPublisher {
             });
     metricsLogger.flush();
   }
-
+  
 }

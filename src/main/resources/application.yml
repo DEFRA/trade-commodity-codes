@@ -69,7 +69,6 @@ logging:
     uk.gov.defra.cdp.trade.demo.common.metrics: ${LOGGING_LEVEL_UK_GOV_DEFRA_CDP_TRADE_DEMO_COMMON_METRICS:INFO}
     org.springframework: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK:INFO}
     org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
-    org.mongodb: ${LOGGING_LEVEL_ORG_MONGODB_DRIVER:WARN}
     io.netty.handler.logging.LoggingHandler: WARN
 
 # Actuator endpoints
@@ -87,20 +86,33 @@ management:
   info:
     env:
       enabled: true
-  health:
-    mongo:
-      enabled: false
   metrics:
     enabled: true
-    export:
-      cloudwatch:
-        enabled: true
-        step: 1m
-        connectTimeout: 20s
-        readTimeout: 20s
-        batchSize: 1000
-        numThreads: 2
-  
+    enable:
+      all: false
+      jvm:
+        gc:
+          enabled: true
+        memory:
+          used: true
+          max: true
+      hikaricp:
+        connections: true
+      jdbc:
+        connections:
+          active:
+            enabled: true
+      tomcat:
+        sessions:
+          active:
+            enabled: true
+      executor:
+        enabled: false
+      application:
+        enabled: false
+
+
+
 # Application info (exposed via /info endpoint)
 info:
   app:

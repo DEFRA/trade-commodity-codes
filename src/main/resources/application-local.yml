@@ -19,6 +19,28 @@ management:
       show-details: when-authorized
   metrics:
     enabled: true
+    enable:
+      all: false
+      jvm:
+        gc:
+          enabled: true
+        memory:
+          used: true
+          max: true
+      hikaricp:
+        connections: true
+      jdbc:
+        connections:
+          active:
+            enabled: true
+      tomcat:
+        sessions:
+          active:
+            enabled: true
+      executor:
+        enabled: false
+      application:
+        enabled: false
 spring:
   datasource:
     username: postgres
