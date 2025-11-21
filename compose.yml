@@ -92,6 +92,10 @@ services:
       # AWS (via LocalStack)
       LOCALSTACK_ENDPOINT: http://localstack:4566
       AWS_REGION: eu-west-2
+      AWS_EMF_ENVIRONMENT: Local
+      AWS_EMF_NAMESPACE: trade-commodity-codes
+      AWS_EMF_SERVICE_TYPE: SpringBootApp
+      AWS_EMF_WRITE_TO_STDOUT: true
 
       # Logging
       LOG_LEVEL: DEBUG

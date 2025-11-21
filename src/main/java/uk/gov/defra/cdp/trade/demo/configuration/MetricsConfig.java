@@ -27,4 +27,5 @@ public class MetricsConfig {
     log.debug("Creating TimedAspect for {}", registry.getClass().getSimpleName());
     return new TimedAspect(registry);
   }
+
 }
