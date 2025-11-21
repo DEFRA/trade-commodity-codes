@@ -87,7 +87,7 @@ management:
     env:
       enabled: true
   metrics:
-    enabled: ${METRICS_ENABLED:true}
+    enabled: ${METRICS_ENABLED:false}
     enable:
       all: false
       jvm:
@@ -97,7 +97,16 @@ management:
           used: true
           max: true
       hikaricp:
-        connections: true
+        connections:
+          active: true
+          pending: false
+          timeout: false
+          usage: false
+          idle: false
+          creation: false
+          acquire: false
+          min: false
+
       jdbc:
         connections:
           active:
