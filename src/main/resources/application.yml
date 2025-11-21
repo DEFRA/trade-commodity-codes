@@ -87,7 +87,7 @@ management:
     env:
       enabled: true
   metrics:
-    enabled: true
+    enabled: ${METRICS_ENABLED:true}
     enable:
       all: false
       jvm:
