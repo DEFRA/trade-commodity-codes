@@ -7,22 +7,20 @@ This directory contains Liquibase XML changelog files for managing the commodity
 ### Core Changelog Files
 
 1. **`db.changelog.xml`** - Main entry point that includes all other changelogs in the correct order
-2. **`01-tables-changelog.xml`** - All table structures, constraints, and indexes
-3. **`02-functions-changelog.xml`** - All stored functions and procedures
-4. **`03-views-changelog.xml`** - All database views for data access
-5. **`04-additional-objects-changelog.xml`** - Triggers, types, sequences, and additional objects
-6. **`05-permissions-changelog.xml`** - Complete role-based security model
+2. **`changes/00-generated-commoditycode-tables-baseline.xml`** - All table structures, constraints, and indexes
+3. **`functions/functions.xml`** - Includes function changelogs
+4. **`functions/00-generated-commoditycode-functions-baseline.xml`** - Function definitions
+5. **`views/views.xml`** - Includes view changelogs
+6. **`views/00-generated-commoditycode-views-baseline.xml`** - View definitions
 
 ### Execution Order
 
-The changelogs must be executed in this specific order (handled automatically by `db.changelog.xml`):
+The changelogs are executed in this specific order (handled automatically by `db.changelog.xml`):
 
 ```
-1. Tables & Constraints    (01-tables-changelog.xml)
-2. Functions               (02-functions-changelog.xml)  
-3. Views                   (03-views-changelog.xml)
-4. Additional Objects      (04-additional-objects-changelog.xml)
-5. Permissions             (05-permissions-changelog.xml)
+1. Tables & Constraints    (changes/00-generated-commoditycode-tables-baseline.xml)
+2. Functions               (functions/functions.xml)
+3. Views                   (views/views.xml)
 ```
 
 ## Quick Start
@@ -38,72 +36,52 @@ The changelogs must be executed in this specific order (handled automatically by
 
 ```bash
 # Create target database
-createdb commodity_db
+createdb trade-commodity-codes
 
 # Run complete migration
-liquibase --changeLogFile=db.changelog.xml update
+liquibase --changeLogFile=changelog/db.changelog.xml update
 
 # Verify migration
-liquibase --changeLogFile=db.changelog.xml status
+liquibase --changeLogFile=changelog/db.changelog.xml status
 ```
-
-### User Setup (IMPORTANT)
-
-**Before running the migration**, create database users according to your authentication method:
-
-```sql
--- Option 1: Database Authentication
-CREATE USER commodity_service_user WITH PASSWORD 'your_secure_password';
-CREATE USER commodity_data_loader WITH PASSWORD 'your_secure_password';
-CREATE USER commodity_readonly_user WITH PASSWORD 'your_secure_password';
-CREATE USER commodity_admin_user WITH PASSWORD 'your_secure_password';
-
--- Option 2: Azure Managed Identity
-CREATE USER "your-managed-identity-name" FROM EXTERNAL PROVIDER;
-
--- Option 3: LDAP/AD (configure according to your setup)
-```
-
-Then uncomment and modify the role assignment statements in `05-permissions-changelog.xml`.
 
 ## Database Schema Overview
 
-### Core Tables (15 total)
+### Core Tables (14 total)
 
 | Table | Description | Key Features |
 |-------|-------------|--------------|
+| `article_72_commodities` | Article 72 specific items | Regulatory compliance tracking |
 | `certificates` | Certificate types and descriptions | Primary reference for cert types |
-| `commodity_nomenclature` | Core commodity hierarchy | TRACES codes, parent-child relationships |
-| `species` | Species reference data | EPPO codes, invasive species flags |
-| `certification_requirement` | Links commodities to certificates | Visibility and selectability controls |
 | `certification_nomenclature` | Species-specific cert requirements | Extended classification hierarchy |
+| `certification_requirement` | Links commodities to certificates | Visibility and selectability controls |
+| `commodity_attributes` | Extended commodity attributes | Effective date management, propagation tracking |
 | `commodity_class` | Commodity classifications | Regulatory categorization |
+| `commodity_configuration` | Configuration settings | Test/trial requirements |
 | `commodity_eppo_variety` | EPPO codes and varieties | Plant variety specifications |
-| `hmi_marketing` | HMI marketing standards | Certificate validity periods |
-| `inspection_responsibility` | Inspection assignments | By commodity and intended use |
 | `commodity_group` | Business commodity groupings | Soft delete enabled |
 | `commodity_group_commodity` | Individual group members | Links to main commodity data |
-| `article_72_commodities` | Article 72 specific items | Regulatory compliance |
-| `commodity_configuration` | Configuration settings | Test/trial requirements |
-| `commodity_attributes` | Extended commodity attributes | Effective date management |
+| `commodity_nomenclature` | Core commodity hierarchy | TRACES codes, parent-child relationships |
+| `hmi_marketing` | HMI marketing standards | Certificate validity periods |
+| `inspection_responsibility` | Inspection assignments | By commodity and intended use |
+| `species` | Species reference data | EPPO codes, invasive species flags |
 
-### Views (9 total)
+### Views (6 total)
 
 | View | Description | Use Case |
 |------|-------------|----------|
-| `v_commodity_code` | Main commodity view | Application frontend |
-| `v_commodity_category` | Category data with JSON | API responses |
-| `v_commodity_group` | Active commodity groups | Business reporting |
-| `v_chedpp_species` | CHED-PP species data | Regulatory compliance |
 | `v_chedp_species` | CHED-P species data | Extended classification |
+| `v_chedpp_species` | CHED-PP species data | Regulatory compliance |
+| `v_commodity_category` | Category data with JSON | API responses |
+| `v_commodity_code` | Main commodity view | Application frontend |
 | `v_commodity_code_species` | Enhanced commodity+species | Comprehensive data access |
+| `v_commodity_group` | Active commodity groups | Business reporting |
 
-### Security Roles (4 total)
+### Functions (1 total)
 
-| Role                        | Permissions | Use Case |
-|-----------------------------|-------------|----------|
-| `trade_commodity_codes`     | Read + limited updates | Main application |
-| `trade_commodity_codes_ddl` | Full database access | Administration |
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `fn_commodity_category_data` | Generates commodity category data | Data transformation for API responses |
 
 ## Key PostgreSQL Adaptations
 
@@ -126,43 +104,25 @@ Then uncomment and modify the role assignment statements in `05-permissions-chan
 ### Performance Optimizations
 
 - **Indexes**: Optimized for PostgreSQL query planner
-- **Materialized Views**: `mv_commodity_code_stats` for reporting
-- **Sequences**: Dedicated sequences for batch processing
+- **Auto-increment columns**: Using `BIGSERIAL` and `SERIAL` for efficient ID generation
+- **Effective date tracking**: Most tables include `effective_from` and `effective_to` columns for temporal queries
 
 ## Development Environment
 
 ### Docker Compose Setup
 
-The changelogs are automatically executed in the development environment via Docker Compose:
-
-```yaml
-# In compose.yml
-liquibase:
-  image: liquibase/liquibase:4.32.0
-  depends_on:
-    postgres:
-      condition: service_healthy
-  volumes:
-    - ./changelog:/liquibase/changelog
-  command: >
-    --driver=org.postgresql.Driver
-    --changelog-file=changelog/db.changelog.xml
-    --url=jdbc:postgresql://postgres:5432/trade-commodity-codes
-    --username=postgres
-    --password=postgres
-    update
-```
+The changelogs are automatically executed in the development environment via Docker Compose. Check your `compose.yml` file for the specific Liquibase configuration.
 
 ### Local Development
 
 ```bash
-# Start complete development stack
-make start
+# Start complete development stack (if using Docker Compose)
+docker compose up
 
 # This will:
 # 1. Start PostgreSQL
-# 2. Run Liquibase migrations
-# 3. Start the Spring Boot application
+# 2. Run Liquibase migrations automatically
+# 3. Start the application services
 ```
 
 ## Database Management
@@ -171,125 +131,105 @@ make start
 
 When making schema changes:
 
-1. Create new changelog files in the `changes/` directory
-2. Add references to `db.changelog.xml`
-3. Test with `make start` to verify migrations
+1. Create new changelog files in the appropriate directory:
+   - Tables: `changes/`
+   - Functions: `functions/`
+   - Views: `views/`
+2. Add references to the parent XML file (e.g., `db.changelog.xml`, `functions/functions.xml`, or `views/views.xml`)
+3. Test migrations with a clean database
 4. Commit changes to version control
 
-### Data Loading and Maintenance
+### Available Functions
 
 ```sql
--- Log data operations (if available)
-SELECT fn_log_data_load('table_name', 'source_file.csv');
-
--- Validate commodity codes (if available)
-SELECT fn_validate_commodity_code_format('12345678');
-
--- Refresh materialized views (if available)
-REFRESH MATERIALIZED VIEW mv_commodity_code_stats;
+-- Generate commodity category data
+SELECT fn_commodity_category_data(/* parameters */);
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Permission Errors**
+1. **View Dependency Issues**
    ```sql
-   -- Check role assignments
-   SELECT r.rolname, m.rolname as member_of 
-   FROM pg_roles r 
-   JOIN pg_auth_members am ON r.oid = am.member 
-   JOIN pg_roles m ON am.roleid = m.oid 
-   WHERE r.rolname LIKE 'commodity_%';
-   ```
-
-2. **View Dependency Issues**
-   ```sql
-   -- Check view dependencies
-   SELECT schemaname, viewname, definition 
-   FROM pg_views 
-   WHERE schemaname = 'public' 
+   -- Check view definitions
+   SELECT schemaname, viewname, definition
+   FROM pg_views
+   WHERE schemaname = 'public'
    ORDER BY viewname;
    ```
 
-3. **Function Issues**
+2. **Function Issues**
    ```sql
    -- List all functions
-   SELECT routine_name, routine_type 
-   FROM information_schema.routines 
+   SELECT routine_name, routine_type
+   FROM information_schema.routines
    WHERE routine_schema = 'public';
+   ```
+
+3. **Table Structure Verification**
+   ```sql
+   -- List all tables
+   SELECT tablename
+   FROM pg_tables
+   WHERE schemaname = 'public'
+   ORDER BY tablename;
    ```
 
 ### Validation Queries
 
 ```sql
 -- Verify table row counts
-SELECT schemaname, tablename, n_tup_ins as row_count 
-FROM pg_stat_user_tables 
+SELECT schemaname, tablename, n_live_tup as row_count
+FROM pg_stat_user_tables
 ORDER BY tablename;
 
--- Check foreign key constraints
-SELECT tc.table_name, tc.constraint_name, tc.constraint_type,
-       kcu.column_name, ccu.table_name AS foreign_table_name,
-       ccu.column_name AS foreign_column_name 
-FROM information_schema.table_constraints AS tc 
-JOIN information_schema.key_column_usage AS kcu
+-- Check primary keys
+SELECT tc.table_name, tc.constraint_name, kcu.column_name
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu
   ON tc.constraint_name = kcu.constraint_name
   AND tc.table_schema = kcu.table_schema
-JOIN information_schema.constraint_column_usage AS ccu
-  ON ccu.constraint_name = tc.constraint_name
-  AND ccu.table_schema = tc.table_schema
-WHERE tc.constraint_type = 'FOREIGN KEY';
+WHERE tc.constraint_type = 'PRIMARY KEY'
+  AND tc.table_schema = 'public'
+ORDER BY tc.table_name;
 
--- Verify materialized view data
-SELECT * FROM mv_commodity_code_stats;
-```
-
-## Performance Tuning
-
-### Recommended Settings
-
-```sql
--- PostgreSQL configuration recommendations
--- Add to postgresql.conf:
-
-shared_buffers = '256MB'           # Adjust based on available RAM
-effective_cache_size = '1GB'       # Adjust based on total RAM
-maintenance_work_mem = '64MB'      # For index creation
-work_mem = '4MB'                   # For query operations
-random_page_cost = 1.1             # For SSD storage
-
--- Enable query logging for performance analysis
-log_statement = 'all'
-log_min_duration_statement = 1000  # Log queries > 1 second
-```
-
-### Monitoring Queries
-
-```sql
--- Find slow queries
-SELECT query, calls, total_time, mean_time 
-FROM pg_stat_statements 
-ORDER BY mean_time DESC 
-LIMIT 10;
-
--- Check index usage
-SELECT schemaname, tablename, indexname, idx_scan, idx_tup_read, idx_tup_fetch
-FROM pg_stat_user_indexes 
-ORDER BY idx_scan DESC;
-
--- Monitor table activity
-SELECT schemaname, tablename, seq_scan, seq_tup_read, idx_scan, idx_tup_fetch
-FROM pg_stat_user_tables 
-ORDER BY seq_scan DESC;
+-- List all views
+SELECT table_name, view_definition
+FROM information_schema.views
+WHERE table_schema = 'public'
+ORDER BY table_name;
 ```
 
 ## Version Information
 
 - **Target Database**: PostgreSQL 12+
-- **Liquibase Version**: 4.32.0+
-- **Updated**: November 2024
+- **Liquibase Version**: 4.0+
+- **Schema Version**: Auto-generated baseline (November 2024)
 - **Purpose**: Database schema management for Trade Commodity Codes application
+
+## Directory Structure
+
+```
+changelog/
+├── README.md                          # This file
+├── db.changelog.xml                   # Main changelog entry point
+├── changes/                           # Table definitions
+│   └── 00-generated-commoditycode-tables-baseline.xml
+├── functions/                         # Function definitions
+│   ├── functions.xml                  # Function changelog index
+│   ├── 00-generated-commoditycode-functions-baseline.xml
+│   └── fn_commodity_category_data.sql
+└── views/                             # View definitions
+    ├── views.xml                      # View changelog index
+    ├── 00-generated-commoditycode-views-baseline.xml
+    ├── chedp_species_view.sql
+    ├── chedpp_species_view.sql
+    ├── commodity_category_view.sql
+    ├── commodity_code_species_view.sql
+    ├── commodity_code_view.sql
+    └── commodity_group_view.sql
+```
 
 ## Support
 
@@ -306,7 +246,11 @@ For issues or questions:
 When modifying these changelogs:
 
 1. Always test changes on a clean database
-2. Update rollback procedures
-3. Maintain proper changeset IDs
-4. Document any new dependencies
-5. Update this README with significant changes
+2. Follow the existing structure:
+   - New tables go in `changes/` directory
+   - New functions go in `functions/` directory
+   - New views go in `views/` directory
+3. Use `runOnChange="true"` for functions and views to allow updates
+4. Maintain proper changeset IDs (avoid conflicts)
+5. Document any new dependencies
+6. Update this README with significant changes
