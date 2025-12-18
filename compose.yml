@@ -46,8 +46,6 @@ services:
         condition: service_completed_successfully
     volumes:
       - './changelog:/app/changelog'
-    env_file:
-      - 'compose/aws.env'
     environment:
       # Server
       PORT: 8086
@@ -57,8 +55,7 @@ services:
       ENVIRONMENT: local
 
       # Postgres
-      POSTGRES_URI: jdbc:postgresql://postgres:5432/trade-commodity-codes
-      POSTGRES_DATABASE: trade-commodity-codes
+      POSTGRES_WRITE_HOSTNAME: postgres
 
       # AWS (via LocalStack)
       LOCALSTACK_ENDPOINT: http://localstack:4566
