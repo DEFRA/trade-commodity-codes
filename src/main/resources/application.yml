@@ -6,8 +6,8 @@ spring:
   application:
     name: trade-commodity-codes
   datasource:
-    url: jdbc:postgresql://${POSTGRES_WRITE_HOSTNAME:postgres}:5432/trade-commodity-codes
-    hostname: ${POSTGRES_WRITE_HOSTNAME:postgres}
+    url: jdbc:postgresql://${POSTGRES_WRITE_HOSTNAME:localhost}:5432/trade-commodity-codes
+    hostname: ${POSTGRES_WRITE_HOSTNAME:localhost}
     port: 5432
     username: trade_commodity_codes
     database: trade_commodity_codes

@@ -1,49 +1,6 @@
 services:
-  localstack:
-    image: localstack/localstack:3.0.2
-    ports:
-      - '4566:4566' # LocalStack Gateway
-      - '4510-4559:4510-4559' # external services port range
-    env_file:
-      - 'compose/aws.env'
-    environment:
-      DEBUG: ${DEBUG:-1}
-      LS_LOG: WARN # Localstack DEBUG Level
-      SERVICES: s3,sqs,sns,cloudwatch
-      LOCALSTACK_HOST: 127.0.0.1
-    volumes:
-      - localstack-data:/var/lib/localstack
-      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
-    healthcheck:
-      test: ['CMD', 'curl', 'localhost:4566']
-      interval: 5s
-      start_period: 5s
-      retries: 3
-    networks:
-      - cdp-tenant
-
-  postgres:
-    image: postgres:16
-    container_name: trade-commodity-codes-postgres
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: trade-commodity-codes
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-    networks:
-      - cdp-tenant
-
-  liquibase:
+  liquibase-schema:
     image: liquibase/liquibase:4.32.0
-    depends_on:
-      postgres:
-        condition: service_healthy
     volumes:
       - ./changelog:/liquibase/changelog
     command: >
@@ -56,38 +13,49 @@ services:
     networks:
       - cdp-tenant
 
+  liquibase-data:
+    image: liquibase/liquibase:4.32.0
+    depends_on:
+      liquibase-schema:
+        condition: service_completed_successfully
+    volumes:
+      - ./data:/liquibase/data
+      - ./data/csv:/liquibase/data/csv
+    command: >
+      --driver=org.postgresql.Driver
+      --changelog-file=data/db.changelog.xml
+      --url=jdbc:postgresql://postgres:5432/trade-commodity-codes
+      --username=postgres
+      --password=postgres
+      --log-level=debug
+      update
+    networks:
+      - cdp-tenant
+
   trade-commodity-codes:
     build:
       context: .
       target: development
     ports:
-      - '8085:8085'
-      - '5005:5005' # Java debug port
-    links:
-      - 'localstack:localstack'
-      - 'postgres:postgres'
+      - '8086:8086'
+      - '5006:5005' # Java debug port
     depends_on:
-      localstack:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      liquibase:
+      liquibase-schema:
+        condition: service_completed_successfully
+      liquibase-data:
         condition: service_completed_successfully
     volumes:
       - './changelog:/app/changelog'
-    env_file:
-      - 'compose/aws.env'
     environment:
       # Server
-      PORT: 8085
+      PORT: 8086
 
       # Service Identity
       SERVICE_VERSION: 0.0.0-local
       ENVIRONMENT: local
 
       # Postgres
-      POSTGRES_URI: jdbc:postgresql://postgres:5432/trade-commodity-codes
-      POSTGRES_DATABASE: trade-commodity-codes
+      POSTGRES_WRITE_HOSTNAME: postgres
 
       # AWS (via LocalStack)
       LOCALSTACK_ENDPOINT: http://localstack:4566
@@ -118,11 +86,7 @@ services:
 
 ################################################################################
 
-volumes:
-  localstack-data:
-  postgres-data:
-
 networks:
   cdp-tenant:
-    driver: bridge
+    external: true
     name: cdp-tenant

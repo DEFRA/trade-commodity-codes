@@ -173,3 +173,7 @@ coverage.xml
 
 # AI reference files
 Claude.md
+
+# Liquibase data files
+/data/csv/*.csv
+/data/

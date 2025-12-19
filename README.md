@@ -2,17 +2,11 @@ The curent p# Trade Commodity Codes
 
 Spring Boot 3.2.11 backend for the Core Delivery Platform (CDP)
 
----
-
-> **Migration Note:** This repository was migrated from C# ASP.NET. 
-> The original .NET code is preserved in the `dotnet-original-code` branch
-
----
 
 ## What is this?
 
 A CDP-compliant Spring Boot backend that demonstrates:
-- Full CRUD operations with MongoDB
+- Full CRUD operations with Postgres
 - ECS JSON logging with trace ID propagation
 - HTTP proxy configuration for outbound requests
 - Actuator endpoints with production security defaults
@@ -21,138 +15,73 @@ A CDP-compliant Spring Boot backend that demonstrates:
 
 ## Quick Start
 
-```bash
-# 1. Install JDK 21 (see below for options)
-# 2. Set JAVA_HOME (source .envrc or export manually)
-make start               # Start backend + MongoDB + LocalStack
-```
+This application requires data in the form of commodity codes. Head to 
+https://drive.google.com/file/d/15VuC-SjIMPAZ98jEI1kH5AY5KvpRzTva/view?usp=drive_link to download
+a zip file which contains a data folder. Store this at the root of this project. Then
+when running the project via docker, the data will be loaded automatically. See the liquibase-data
+step in the docker compose file for more details.
 
-Verify: `curl http://localhost:8085/health`
+### Local Development
 
----
+All infrastructure dependencies are centrally managed in `../trade-demo-local`. Choose the workflow that fits your needs:
 
-## Development
+#### Option 1: Backend in Docker (Production-like)
 
-### Commands
-
-```bash
-make help              # Show all commands
-make start             # Run backend with MongoDB and LocalStack (default)
-make stop              # Stop all services and remove volumes
-make build             # Build project
-make build-image       # Build Docker image (for use with frontend)
-make test              # Run unit tests (requires JAVA_HOME)
-make verify            # Run all tests including integration tests (requires Docker)
-make clean             # Clean Maven build and remove test containers
-make logs              # Show logs from all running services
-make ps                # Show status of all services
-```
-
-
-**Direct execution (no Docker):**
-```bash
-source .envrc && mvn spring-boot:run    # Start
-Ctrl+C                                   # Stop
-```
-
-### Running Tests with Testcontainers
-
-Tests use Testcontainers to spin up real MongoDB instances. Configuration differs by Docker runtime:
-
-**Docker Desktop:** Works out of the box. No configuration needed.
-
-**Rancher Desktop:** Requires one-time configuration in `~/.testcontainers.properties`:
-
-```properties
-# Use Unix socket client provider
-docker.client.strategy=org.testcontainers.dockerclient.UnixSocketClientProviderStrategy
-
-# Point to Rancher Desktop socket
-docker.host=unix:///Users/$USER/.rd/docker.sock
-```
-
-Then run tests normally:
-```bash
-source .envrc && mvn test
-```
-
-**Why is `TESTCONTAINERS_RYUK_DISABLED=true` set in `pom.xml`?**
-
-The Ryuk sidecar container (used for cleanup) fails to start on some environments including Rancher Desktop. This is a known issue ([testcontainers/testcontainers-java#4166](https://github.com/testcontainers/testcontainers-java/issues/4166), [rancher-desktop#1209](https://github.com/rancher-sandbox/rancher-desktop/issues/1209)). Disabling Ryuk allows tests to run but requires manual cleanup. Use `make clean` to remove orphaned test containers and Maven build artifacts.
-
-The environment variable is set in `maven-surefire-plugin` configuration so it applies automatically to all test runs.
-
-### Developing with Frontend
-
-The frontend (`../trade-demo-frontend`) communicates directly with this backend. Choose the workflow that best fits your needs:
-
-#### Option 1: Native Backend (Fastest for Active Development)
-
-Best when actively developing backend code. Spring Boot hot-reloads many changes without restart.
+Run everything in Docker, including this backend service:
 
 ```bash
-# Terminal 1: Infrastructure only
+# Start infrastructure + all backend services
+cd ../trade-demo-local
+docker compose --profile services up -d
+
+# After code changes to this service:
 cd ../trade-commodity-codes
-docker compose up mongodb localstack
-
-# Terminal 2: Backend (native with hot reload)
-source .envrc && mvn spring-boot:run
-
-# Terminal 3: Frontend (native)
-cd ../trade-demo-frontend
-npm run dev
+docker compose up --build
 ```
+
+**Pros:** Production-like environment
+**Cons:** Slower iteration (~30-60s per rebuild)
+
+#### Option 2: Native Backend (Fastest for Active Development)
+
+Run infrastructure in Docker, this backend natively for hot reload:
+
+```bash
+# Terminal 1: Start infrastructure only
+cd ../trade-demo-local
+docker compose --profile infra up -d
+
+# Terminal 2: Run this backend natively (hot reload)
+cd ../trade-commodity-codes
+mvn spring-boot:run
+```
+Or to use the IDE:
+
+![img.png](run_configuration.png)
 
 **Pros:** Fast iteration, Spring Boot DevTools hot reload, easy debugging
-**Cons:** Need to manage multiple terminals
+**Cons:** None
 
-#### Option 2: Full Docker Stack (Production-like)
+#### Option 3: Individual Service in Docker
 
-Best when testing full Docker environment or handing off to frontend team.
-
-```bash
-# Terminal 1: Start everything via frontend Makefile
-cd ../trade-demo-frontend
-make mongo      # Starts backend (Docker) + frontend (native)
-
-# After backend code changes:
-cd ../trade-commodity-codes
-make build-image        # Rebuild image
-cd ../trade-demo-frontend
-docker compose restart trade-commodity-codes
-```
-
-**Pros:** Production-like environment, clean separation
-**Cons:** Slow iteration (~30-60s per rebuild)
-
-#### Option 3: Backend Only in Docker
-
-When you need to test backend Docker image specifically.
+When you need to test just this service's Docker image:
 
 ```bash
-# Terminal 1: Backend in Docker
+# Terminal 1: Start infrastructure
+cd ../trade-demo-local
+docker compose --profile infra up -d
+
+# Terminal 2: Start just this backend service
 cd ../trade-commodity-codes
-make start
-
-# After code changes:
-make stop && make start
-
-# Terminal 2: Frontend (native)
-cd ../trade-demo-frontend
-npm run dev
+docker compose up --build
 ```
 
-**Pros:** Tests actual Docker image
-**Cons:** Slowest iteration cycle
+**Pros:** Tests actual Docker image without starting other services
+**Cons:** Slower than native execution
 
-**Backend endpoints used by frontend:**
-- `GET /example` - List all examples
-- `POST /example` - Create example
-- `GET /example/{id}` - Get by ID
-- `PUT /example/{id}` - Update example
-- `DELETE /example/{id}` - Delete example
+All endpoints support trace ID propagation via `x-cdp-request-id` header.
 
-The frontend propagates `x-cdp-request-id` headers for distributed tracing.
+See `../trade-demo-local/README.md` for more infrastructure management options.
 
 
 ---
@@ -267,59 +196,13 @@ This shows all `error.*` field mappings. The `error.stack_trace` field should be
 
 The service exposes two types of endpoints: production-ready CRUD operations and temporary debug experiments for verifying CDP compliance.
 
-### Example API (Production CRUD Operations)
-
-Standard REST API demonstrating CDP-compliant CRUD operations with MongoDB. All endpoints support trace ID propagation via `x-cdp-request-id` header.
-
-**Create an example:**
-```bash
-curl -X POST http://localhost:8085/example \
-  -H "Content-Type: application/json" \
-  -H "x-cdp-request-id: test-trace-123" \
-  -d '{"name": "test-example", "value": "test-value"}'
-```
-
-**List all examples:**
-```bash
-curl http://localhost:8085/example \
-  -H "x-cdp-request-id: test-trace-123"
-```
-
-**Get example by ID:**
-```bash
-curl http://localhost:8085/example/{id} \
-  -H "x-cdp-request-id: test-trace-123"
-```
-
-**Update example:**
-```bash
-curl -X PUT http://localhost:8085/example/{id} \
-  -H "Content-Type: application/json" \
-  -H "x-cdp-request-id: test-trace-123" \
-  -d '{"name": "updated-name", "value": "updated-value"}'
-```
-
-**Delete example:**
-```bash
-curl -X DELETE http://localhost:8085/example/{id} \
-  -H "x-cdp-request-id: test-trace-123"
-```
-
-### Debug Experiments (CDP Compliance Verification)
-
-```bash
-curl -X POST http://localhost:8085/debug/run-metrics-experiments \
-  -H "x-cdp-request-id: test-trace-123"
-```
-
-Returns: Status, metric count, EMF namespace, and CloudWatch verification path
 
 **Get debug info:**
 
 Returns current service configuration including service name/version, environment, EMF enabled status, namespace, and logging encoder type.
 
 ```bash
-curl http://localhost:8085/debug/info \
+curl http://localhost:8086/debug/info \
   -H "x-cdp-request-id: test-trace-123"
 ```
 
