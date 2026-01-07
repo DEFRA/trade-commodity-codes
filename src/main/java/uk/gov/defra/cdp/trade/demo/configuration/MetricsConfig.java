@@ -23,12 +23,30 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MetricsConfig {
 
+  /**
+   * Creates TimedAspect bean to enable @Timed annotation support.
+   *
+   * <p>This aspect intercepts methods annotated with @Timed and records execution duration metrics.
+   * Commonly used on controller endpoints to track request processing time.
+   *
+   * @param registry the Micrometer registry for recording metrics
+   * @return configured TimedAspect instance
+   */
   @Bean
   public TimedAspect timedAspect(MeterRegistry registry) {
     log.debug("Creating TimedAspect for {}", registry.getClass().getSimpleName());
     return new TimedAspect(registry);
   }
 
+  /**
+   * Creates CountedAspect bean to enable @Counted annotation support.
+   *
+   * <p>This aspect intercepts methods annotated with @Counted and increments counter metrics.
+   * Useful for tracking method invocation counts without timing overhead.
+   *
+   * @param registry the Micrometer registry for recording metrics
+   * @return configured CountedAspect instance
+   */
   @Bean
   CountedAspect countedAspect(MeterRegistry registry) {
     return new CountedAspect(registry);
