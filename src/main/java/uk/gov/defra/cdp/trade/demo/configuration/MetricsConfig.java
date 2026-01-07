@@ -1,5 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.configuration;
 
+import io.micrometer.core.aop.CountedAspect;
 import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -28,4 +29,8 @@ public class MetricsConfig {
     return new TimedAspect(registry);
   }
 
+  @Bean
+  CountedAspect countedAspect(MeterRegistry registry) {
+    return new CountedAspect(registry);
+  }
 }

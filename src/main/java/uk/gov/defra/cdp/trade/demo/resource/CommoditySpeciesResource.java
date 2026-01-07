@@ -1,5 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.resource;
 
+import io.micrometer.core.annotation.Timed;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ public class CommoditySpeciesResource {
   }
 
   @GetMapping(value = "/chedpp/{commodityCode}")
+  @Timed("controller.getSpecies.time")
   public ResponseEntity<Page<ChedppSpecies>> get(
       @PathVariable("commodityCode") String commodityCode,
       @RequestParam(value = "eppoCode", required = false) String eppoCode,
@@ -43,12 +45,14 @@ public class CommoditySpeciesResource {
   }
 
   @GetMapping(value = "/chedpp/{commodityCode}/count")
+  @Timed("controller.getChedppSpeciesCount.time")
   public ResponseEntity<Integer> getChedppSpeciesCount(
       @PathVariable("commodityCode") String commodityCode) {
     return ResponseEntity.ok(commoditySpeciesService.getChedppSpeciesCount(commodityCode));
   }
 
   @PostMapping(value = "/chedpp/{commodityCode}")
+  @Timed("controller.postChedppSpecies.time")
   public ResponseEntity<Page<ChedppSpecies>> post(
       @PathVariable("commodityCode") String commodityCode,
       @RequestBody CommoditySearchParametersDto searchParameters) {
@@ -61,6 +65,7 @@ public class CommoditySpeciesResource {
   }
 
   @GetMapping(value = "/chedpp/{commodityCode}/species/{speciesId}")
+  @Timed("controller.getChedppSpecies.time")
   public ResponseEntity<ChedppSpecies> getChedppSpecies(
       @PathVariable("commodityCode") final String commodityCode,
       @PathVariable("speciesId") final int speciesId) {
@@ -70,6 +75,7 @@ public class CommoditySpeciesResource {
   }
 
   @GetMapping(value = "/chedp/{commodityCode}")
+  @Timed("controller.getChedpSpecies.time")
   public ResponseEntity<ChedpSpecies> getChedpSpecies(
       @PathVariable("commodityCode") String commodityCode,
       @RequestParam("speciesName") String speciesName) {

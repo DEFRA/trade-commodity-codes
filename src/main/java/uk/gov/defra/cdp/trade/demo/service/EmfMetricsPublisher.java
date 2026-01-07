@@ -41,6 +41,10 @@ public class EmfMetricsPublisher {
                         metricsLogger.putMetric(name, value);
                       });
             });
+    meterRegistry.getMeters()
+        .stream()
+        .filter(meter -> meter.getId().getName().startsWith("controller"))
+        .forEach(meterRegistry::remove);
     metricsLogger.flush();
   }
 }

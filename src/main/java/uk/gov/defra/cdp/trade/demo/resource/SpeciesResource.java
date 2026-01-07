@@ -1,5 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.resource;
 
+import io.micrometer.core.annotation.Timed;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ public class SpeciesResource {
   }
 
   @GetMapping(value = "/{certType}")
+  @Timed("controller.getSpecies.time")
   public ResponseEntity<List<String>> getSpecies(
       @PathVariable("certType") String certType, @RequestParam("filter") String filter) {
 

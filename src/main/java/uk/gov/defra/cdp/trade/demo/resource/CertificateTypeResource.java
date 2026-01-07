@@ -1,5 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.resource;
 
+import io.micrometer.core.annotation.Timed;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ public class CertificateTypeResource {
   }
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  @Timed("controller.getAllCertTypes.time")
   public ResponseEntity<Map<String, List<Character>>> getAllCertTypes(
       @RequestParam(value = "commodityCodes") List<String> commodityCodes) {
     return ResponseEntity.ok(certificateTypeService.getAllCertTypes(commodityCodes));

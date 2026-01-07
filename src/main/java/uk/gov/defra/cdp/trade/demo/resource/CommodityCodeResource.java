@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.defra.cdp.trade.demo.domain.SearchVariety;
-import uk.gov.defra.cdp.trade.demo.enumerations.ChedType;
 import uk.gov.defra.cdp.trade.demo.dto.CommodityAttributeDto;
 import uk.gov.defra.cdp.trade.demo.dto.CommodityCodeDto;
 import uk.gov.defra.cdp.trade.demo.dto.CommodityConfigurationDto;
@@ -28,6 +27,7 @@ import uk.gov.defra.cdp.trade.demo.dto.CommodityVarietyDto;
 import uk.gov.defra.cdp.trade.demo.dto.CommodityVarietyDtoV2;
 import uk.gov.defra.cdp.trade.demo.dto.SupplementaryDataDto;
 import uk.gov.defra.cdp.trade.demo.dto.SupplementaryDataDtoV2;
+import uk.gov.defra.cdp.trade.demo.enumerations.ChedType;
 import uk.gov.defra.cdp.trade.demo.service.CommodityAttributeService;
 import uk.gov.defra.cdp.trade.demo.service.CommodityCodeService;
 import uk.gov.defra.cdp.trade.demo.service.CommodityConfigurationService;
@@ -57,7 +57,7 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/{certType}/top-level")
-  @Timed("CommodityCodeGetTopLevelDuration")
+  @Timed("controller.getTopLevelDuration.time")
   public List<CommodityCodeDto> getTopLevel(@PathVariable("certType") String certType,
       @RequestParam(name = "species", required = false, defaultValue = "") String species) {
     String certToLog = replaceNewLines(certType);
@@ -69,7 +69,7 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/{certType}/parent-code/{parentCode}")
-  @Timed("CommodityCodeGetByParentDuration")
+  @Timed("controller.getByParentDuration.time")
   public List<CommodityCodeDto> getByParentCode(
       @PathVariable("certType") String certType,
       @PathVariable("parentCode") String parentCode,
@@ -90,7 +90,7 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/{certType}/commodity-code/{commodityCode}")
-  @Timed("CommodityCodeGetByCodeDuration")
+  @Timed("controller.getByCodeDuration.time")
   public List<CommodityCodeDto> getByCommodityCode(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode) {
@@ -102,6 +102,7 @@ public class CommodityCodeResource {
 
   @GetMapping(value = "/{certType}/commodity-code/{commodityCode}/supplemental-data",
       params = "eppoCodes")
+  @Timed("controller.getSupplementalDataForEppoCodes.time")
   public ResponseEntity<List<SupplementaryDataDto>> getSupplementalDataForEppoCodes(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode,
@@ -114,6 +115,7 @@ public class CommodityCodeResource {
   }
 
   @PostMapping(value = "/{certType}/commodity-code/{commodityCode}/supplemental-data")
+  @Timed("controller.postSupplementalDataForEppoCodes.time")
   public ResponseEntity<List<SupplementaryDataDto>> postSupplementalDataForEppoCodes(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode,
@@ -123,6 +125,7 @@ public class CommodityCodeResource {
   }
 
   @PostMapping(value = "/{certType}/supplemental-data")
+  @Timed("controller.postSupplementalDataForEppoCodes.time")
   public ResponseEntity<List<SupplementaryDataDtoV2>> postSupplementalDataForEppoCodes(
       @PathVariable("certType") String certType,
       @RequestBody List<CommodityEppoCodesMappingDto> commodityToEppoCodeMappings) {
@@ -139,6 +142,7 @@ public class CommodityCodeResource {
 
   @GetMapping(path = "/v2/{certType}/commodity-code/{commodityCode}/supplemental-data",
       params = "eppoCodes")
+  @Timed("controller.getSupplementalDataForEppoCodesV2.time")
   public ResponseEntity<List<SupplementaryDataDtoV2>> getSupplementalDataForEppoCodesV2(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode,
@@ -149,6 +153,7 @@ public class CommodityCodeResource {
   }
 
   @PostMapping(value = "/v2/{certType}/commodity-code/{commodityCode}/supplemental-data")
+  @Timed("controller.postSupplementalDataForEppoCodesV2.time")
   public ResponseEntity<List<SupplementaryDataDtoV2>> postSupplementalDataForEppoCodesV2(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode,
@@ -160,6 +165,7 @@ public class CommodityCodeResource {
 
   @GetMapping(value = "/chedpp/commodity-code/{commodityCode}/supplemental-data",
       params = "speciesName")
+  @Timed("controller.getSupplementalDataForSpeciesName.time")
   public ResponseEntity<SupplementaryDataDto> getSupplementalDataForSpeciesName(
       @PathVariable("commodityCode") String commodityCode,
       @RequestParam("speciesName") String speciesName) {
@@ -172,6 +178,7 @@ public class CommodityCodeResource {
 
   @GetMapping(value = "/v2/chedpp/commodity-code/{commodityCode}/supplemental-data",
       params = "speciesName")
+  @Timed("controller.getSupplementalDataForSpeciesNameV2.time")
   public ResponseEntity<SupplementaryDataDtoV2> getSupplementalDataForSpeciesNameV2(
       @PathVariable("commodityCode") String commodityCode,
       @RequestParam("speciesName") String speciesName) {
@@ -181,6 +188,7 @@ public class CommodityCodeResource {
   }
 
   @PostMapping(value = "/{certType}/commodity-code/{commodityCode}/supplemental")
+  @Timed("controller.postVarietyMarketingStandard.time")
   public ResponseEntity<List<CommodityVarietyDto>> getVarietyMarketingStandard(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode,
@@ -202,6 +210,7 @@ public class CommodityCodeResource {
   }
 
   @PostMapping(value = "/v2/{certType}/commodity-code/{commodityCode}/supplemental")
+  @Timed("controller.postVarietyMarketingStandardV2.time")
   public ResponseEntity<List<CommodityVarietyDtoV2>> getVarietyMarketingStandardV2(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode,
@@ -225,7 +234,7 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/{certType}/all-parents/{commodityCode}")
-  @Timed("CommodityCodeGetAllParentsDuration")
+  @Timed("controller.getAllParents.time")
   public List<CommodityCodeDto> getAllParents(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode,
@@ -240,24 +249,28 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/groups")
+  @Timed("controller.getGroups.time")
   public List<CommodityGroupsDto> getCommodityGroups(
       @RequestParam("commodityCodes") List<String> commodityCodes) {
     return commodityCodeService.getCommodityGroups(commodityCodes);
   }
 
   @GetMapping(value = "/chedpp/commodity-configuration")
+  @Timed("controller.getCommodityConfiguration.time")
   public List<CommodityConfigurationDto> getCommodityConfiguration(
       @RequestParam("commodityCodes") List<String> commodityCodes) {
     return commodityConfigService.getCommodityConfigurations(commodityCodes, ChedType.CHEDPP);
   }
 
   @GetMapping(value = "/v2/group")
+  @Timed("controller.getCommodityGroup.time")
   public List<CommodityGroupDto> getCommodityGroup(
       @RequestParam("commodityCodes") List<String> commodityCodes) {
     return commodityCodeService.getCommodityGroup(commodityCodes);
   }
 
   @GetMapping(value = "/chedpp/commodity-attributes")
+  @Timed("controller.getCommodityAttributes.time")
   public List<CommodityAttributeDto> getCommodityAttributes(
           @RequestParam("commodityCodes") List<String> commodityCodes) {
     return commodityAttributeService.getCommodityAttributes(commodityCodes);

@@ -1,5 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.resource;
 
+import io.micrometer.core.annotation.Timed;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,13 +15,14 @@ import uk.gov.defra.cdp.trade.demo.service.Article72Service;
 @RequestMapping("/article-72")
 public class Article72Resource {
 
-  private Article72Service article72Service;
+  private final Article72Service article72Service;
 
   public Article72Resource(Article72Service article72Service) {
     this.article72Service = article72Service;
   }
 
   @PostMapping
+  @Timed("controller.article72CommoditySearch.time")
   public ResponseEntity<Article72CommodityDto> search(
       @RequestBody @Valid Article72SearchPayload commoditySearch) {
 
