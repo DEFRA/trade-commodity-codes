@@ -1,5 +1,6 @@
 package uk.gov.defra.cdp.trade.demo.resource;
 
+import io.micrometer.core.annotation.Timed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,7 @@ public class CommodityCategoryResource {
   }
 
   @GetMapping(value = "/{certType}-{commodityCode}")
+  @Timed("controller.getCommodityCategories.time")
   public CommodityCategoryDto get(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode) {

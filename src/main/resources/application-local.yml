@@ -18,17 +18,22 @@ management:
     health:
       show-details: when-authorized
   metrics:
-    enabled: true
+    enabled: ${METRICS_ENABLED:true}
     enable:
       all: false
+      controller: true
       jvm:
-        gc:
-          enabled: true
         memory:
+          committed: true
           used: true
           max: true
+        threads:
+          live: true
+          peak: true
       hikaricp:
-        connections: true
+        connections:
+          active: true
+          idle: true
       jdbc:
         connections:
           active:
@@ -37,10 +42,6 @@ management:
         sessions:
           active:
             enabled: true
-      executor:
-        enabled: false
-      application:
-        enabled: false
 spring:
   datasource:
     username: postgres

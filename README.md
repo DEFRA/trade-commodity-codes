@@ -110,31 +110,139 @@ awslocal cloudwatch list-metrics
 
 ```
 
-### Standard Metrics
+### Metrics System
 
-Micrometer automatically collects standard metrics via Spring Boot Actuator:
-- JVM metrics (memory, threads, GC)
-- HTTP metrics (request counts, durations)
-- Database metrics (connection pool, query times)
+This service implements comprehensive metrics collection using Micrometer and AWS Embedded Metrics Format (EMF).
 
-**View metrics:**
-- **Development**: `/metrics` (when using dev profile: `--spring.profiles.active=dev`)
-- **Production**: Metrics endpoint not exposed (security by default)
+#### Architecture
 
-### Testing
+**Collection Layer:**
+- **Micrometer**: Collects JVM, HTTP, and database metrics via Spring Boot Actuator
+- **Spring AOP**: Instruments controller methods with `@Timed` annotations for request duration tracking
+- **Custom Aspects**: `TimedAspect` and `CountedAspect` beans enable annotation-based metrics
 
-Metrics are **disabled in test profile** using `NoOpMetricsService`.
-No mocking required - inject `MetricsService` and call normally:
+**Publishing Layer:**
+- **EmfMetricsPublisher**: Scheduled service (every 60 seconds) that publishes metrics to CloudWatch
+- **Auto-cleanup**: Controller metrics are removed after publishing to prevent unbounded growth
+- **Namespace**: Configurable via `aws.emf.namespace` property
+
+#### Standard Metrics Collected
+
+**JVM Metrics** (when `management.metrics.enable.jvm.*=true`):
+- `jvm.memory.committed` - Memory committed to JVM
+- `jvm.memory.used` - Memory currently used
+- `jvm.memory.max` - Maximum memory available
+- `jvm.threads.live` - Current thread count
+- `jvm.threads.peak` - Peak thread count
+
+**Database Metrics** (when `management.metrics.enable.hikaricp.*=true`):
+- `hikaricp.connections.active` - Active database connections
+- `hikaricp.connections.idle` - Idle database connections
+
+**Controller Metrics** (via `@Timed` annotations):
+- `controller.{methodName}.time` - Request duration for each endpoint
+- Published every 60 seconds, then cleaned up automatically
+
+#### Configuration
+
+**Enable/Disable Metrics:**
+```yaml
+management:
+  metrics:
+    enabled: ${METRICS_ENABLED:false}  # Default: disabled in production
+```
+
+**Local Development:**
+```bash
+# Start with metrics enabled
+METRICS_ENABLED=true mvn spring-boot:run
+
+# View metrics (requires dev profile)
+curl http://localhost:8086/metrics
+```
+
+**Production:**
+- Metrics endpoint not exposed (security by default)
+- Enable via `METRICS_ENABLED=true` environment variable
+- Published to CloudWatch via EMF format
+
+#### Viewing Metrics in LocalStack
+
+```bash
+# Access LocalStack container
+docker exec -it trade-commodity-codes-localstack-1 /bin/bash
+
+# List all metrics
+awslocal cloudwatch list-metrics
+
+# Get metric statistics
+awslocal cloudwatch get-metric-statistics \
+  --namespace TradeCommodityCodes \
+  --metric-name controller.getTopLevelDuration.time \
+  --start-time 2025-01-01T00:00:00Z \
+  --end-time 2025-12-31T23:59:59Z \
+  --period 3600 \
+  --statistics Average,Maximum,Minimum
+```
+
+#### Testing
+
+**Unit Tests:**
+- `MetricsConfigTest`: Validates bean registration for `TimedAspect` and `CountedAspect`
+- `EmfMetricsPublisherTest`: Tests metrics publishing and controller metric cleanup
+
+**Integration Tests:**
+- `CommodityCodeResourceMetricsIntegrationTest`: Verifies `@Timed` annotations record metrics
+
+**Test Profile Behavior:**
+Metrics are disabled in test profile. No mocking required - inject `MeterRegistry` normally:
 
 ```java
 @Autowired
-private MetricsService metricsService;
+private MeterRegistry meterRegistry;
 
 @Test
-void testOrderProcessing() {
-    metricsService.counter("test.metric");  // Silent no-op in tests
+void testSomething() {
+    // Metrics work normally in tests when explicitly enabled
+    meterRegistry.counter("test.metric").increment();
 }
 ```
+
+#### Adding New Metrics
+
+**Controller Timing:**
+```java
+@Timed("controller.yourMethodName.time")
+@GetMapping("/your-endpoint")
+public ResponseEntity<YourDto> yourMethod() {
+    // Implementation
+}
+```
+
+**Custom Counters:**
+```java
+@Autowired
+private MeterRegistry meterRegistry;
+
+public void yourBusinessLogic() {
+    meterRegistry.counter("business.operation.count").increment();
+}
+```
+
+#### Troubleshooting
+
+**No metrics appearing in CloudWatch:**
+1. Check `METRICS_ENABLED=true` is set
+2. Verify EMF publisher is running: Check logs for "Publishing metrics for"
+3. Confirm LocalStack is running: `docker compose ps localstack`
+
+**Metrics growing unbounded:**
+- Controller metrics (prefix `controller.`) are automatically cleaned up after publishing
+- Non-controller metrics persist by design for long-term monitoring
+
+**High memory usage:**
+- Review metric cardinality - avoid high-cardinality tags (e.g., user IDs, trace IDs)
+- Consider reducing metric retention or publishing frequency
 
 ---
 
