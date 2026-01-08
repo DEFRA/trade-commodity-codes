@@ -1,4 +1,4 @@
-package uk.gov.defra.cdp.trade.demo.resource;
+package uk.gov.defra.cdp.trade.demo.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +30,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration-test")
-class CommodityCodeResourceMetricsIntegrationTest {
+class CommodityCodeEndpointMetricsIT {
 
   @LocalServerPort
   int port;
