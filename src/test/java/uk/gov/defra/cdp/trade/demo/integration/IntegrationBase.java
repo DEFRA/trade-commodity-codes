@@ -40,6 +40,8 @@ abstract class IntegrationBase {
   static void setProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", POSTGRES_CONTAINER::getJdbcUrl);
     registry.add("spring.datasource.hostname", POSTGRES_CONTAINER::getHost);
+    registry.add("management.metrics.enabled", () -> "true");
+    registry.add("management.metrics.enable.controller", () -> "true");
   }
 
   WebTestClient webClient() {
