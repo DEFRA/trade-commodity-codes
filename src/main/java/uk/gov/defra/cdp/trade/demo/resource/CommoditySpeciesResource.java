@@ -29,7 +29,7 @@ public class CommoditySpeciesResource {
   }
 
   @GetMapping(value = "/chedpp/{commodityCode}")
-  @Timed("controller.getSpecies.time")
+  @Timed("controller.get.time")
   public ResponseEntity<Page<ChedppSpecies>> get(
       @PathVariable("commodityCode") String commodityCode,
       @RequestParam(value = "eppoCode", required = false) String eppoCode,

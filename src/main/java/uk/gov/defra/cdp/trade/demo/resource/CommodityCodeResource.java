@@ -57,7 +57,7 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/{certType}/top-level")
-  @Timed("controller.getTopLevelDuration.time")
+  @Timed("controller.getTopLevel.time")
   public List<CommodityCodeDto> getTopLevel(@PathVariable("certType") String certType,
       @RequestParam(name = "species", required = false, defaultValue = "") String species) {
     String certToLog = replaceNewLines(certType);
@@ -69,7 +69,7 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/{certType}/parent-code/{parentCode}")
-  @Timed("controller.getByParentDuration.time")
+  @Timed("controller.getByParent.time")
   public List<CommodityCodeDto> getByParentCode(
       @PathVariable("certType") String certType,
       @PathVariable("parentCode") String parentCode,
@@ -90,7 +90,7 @@ public class CommodityCodeResource {
   }
 
   @GetMapping(value = "/{certType}/commodity-code/{commodityCode}")
-  @Timed("controller.getByCodeDuration.time")
+  @Timed("controller.getByCode.time")
   public List<CommodityCodeDto> getByCommodityCode(
       @PathVariable("certType") String certType,
       @PathVariable("commodityCode") String commodityCode) {
@@ -125,7 +125,7 @@ public class CommodityCodeResource {
   }
 
   @PostMapping(value = "/{certType}/supplemental-data")
-  @Timed("controller.postSupplementalDataForEppoCodes.time")
+  @Timed("controller.postSupplementalDataForEppoCodes2.time")
   public ResponseEntity<List<SupplementaryDataDtoV2>> postSupplementalDataForEppoCodes(
       @PathVariable("certType") String certType,
       @RequestBody List<CommodityEppoCodesMappingDto> commodityToEppoCodeMappings) {
